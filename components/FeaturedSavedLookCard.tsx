@@ -1,6 +1,7 @@
-import { Image, Pressable, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import colors from '../theme/colors';
 import { SavedLook } from '../lib/savedLooksStorage';
+import ProductImageFrame from './ProductImageFrame';
 
 export default function FeaturedSavedLookCard({
   look,
@@ -29,9 +30,9 @@ export default function FeaturedSavedLookCard({
         borderColor: colors.borderSoft,
         marginBottom: 16,
         shadowColor: '#000',
-        shadowOpacity: 0.08,
-        shadowRadius: 12,
-        elevation: 5,
+        shadowOpacity: 0.05,
+        shadowRadius: 10,
+        elevation: 3,
       }}
     >
       <Text
@@ -67,25 +68,15 @@ export default function FeaturedSavedLookCard({
         {look.explanation}
       </Text>
 
-      <View style={{ flexDirection: 'row', marginBottom: 14 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'flex-start', marginBottom: 14 }}>
         {pieces.slice(0, 3).map((item, index) => (
-          <View
-            key={index}
-            style={{
-              width: 92,
-              height: 92,
-              borderRadius: 16,
-              overflow: 'hidden',
-              backgroundColor: '#F6F2EC',
-              marginRight: 10,
-            }}
-          >
-            <Image
-              source={{ uri: item.processedImageUri || item.imageUri }}
-              style={{ width: '100%', height: '100%' }}
-              resizeMode="contain"
-            />
-          </View>
+          <ProductImageFrame
+            key={`${item.id || index}-${index}`}
+            uri={item.processedImageUri || item.imageUri}
+            category={item.category}
+            frameWidth={92}
+            style={{ marginRight: 10 }}
+          />
         ))}
       </View>
 
@@ -93,7 +84,7 @@ export default function FeaturedSavedLookCard({
         style={{
           backgroundColor: '#F3EFE9',
           paddingVertical: 12,
-          borderRadius: 14,
+          borderRadius: 12,
           alignItems: 'center',
         }}
       >

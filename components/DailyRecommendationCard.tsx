@@ -1,6 +1,7 @@
 import { Image, Pressable, Text, View } from 'react-native';
 import colors from '../theme/colors';
 import { DailyHomeRecommendation } from '../lib/homeRecommendation';
+import ProductImageFrame from './ProductImageFrame';
 
 export default function DailyRecommendationCard({
   recommendation,
@@ -28,9 +29,9 @@ export default function DailyRecommendationCard({
         borderColor: colors.borderSoft,
         marginBottom: 16,
         shadowColor: '#000',
-        shadowOpacity: 0.08,
-        shadowRadius: 12,
-        elevation: 5,
+        shadowOpacity: 0.05,
+        shadowRadius: 10,
+        elevation: 3,
       }}
     >
       <Text
@@ -92,25 +93,15 @@ export default function DailyRecommendationCard({
         </View>
       ) : (
         !!pieces.length && (
-          <View style={{ flexDirection: 'row', marginBottom: 14 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'flex-start', marginBottom: 14 }}>
             {pieces.slice(0, 3).map((item: any, index) => (
-              <View
+              <ProductImageFrame
                 key={`${item.id}-${index}`}
-                style={{
-                  width: 92,
-                  height: 92,
-                  borderRadius: 16,
-                  overflow: 'hidden',
-                  backgroundColor: '#F6F2EC',
-                  marginRight: 10,
-                }}
-              >
-                <Image
-                  source={{ uri: item.processedImageUri || item.imageUri }}
-                  style={{ width: '100%', height: '100%' }}
-                  resizeMode="contain"
-                />
-              </View>
+                uri={item.processedImageUri || item.imageUri}
+                category={item.category}
+                frameWidth={92}
+                style={{ marginRight: 10 }}
+              />
             ))}
           </View>
         )

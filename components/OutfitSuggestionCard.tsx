@@ -1,7 +1,8 @@
-import { Image, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import colors from '../theme/colors';
 import { OutfitRecommendation } from '../types/outfit';
 import { WardrobeItem } from '../types/wardrobe';
+import ProductImageFrame from './ProductImageFrame';
 
 function PieceBlock({ label, item }: { label: string; item: WardrobeItem }) {
   return (
@@ -14,27 +15,19 @@ function PieceBlock({ label, item }: { label: string; item: WardrobeItem }) {
         borderWidth: 1,
         borderColor: colors.borderSoft,
         shadowColor: '#000',
-        shadowOpacity: 0.06,
-        shadowRadius: 10,
-        elevation: 4,
+        shadowOpacity: 0.04,
+        shadowRadius: 8,
+        elevation: 2,
       }}
     >
       <Text style={{ fontSize: 13, color: colors.muted, marginBottom: 10 }}>{label}</Text>
 
-      <View
-        style={{
-          backgroundColor: '#F6F2EC',
-          borderRadius: 18,
-          marginBottom: 12,
-          overflow: 'hidden',
-        }}
-      >
-        <Image
-          source={{ uri: item.processedImageUri || item.imageUri }}
-          style={{ width: '100%', height: 220 }}
-          resizeMode="contain"
-        />
-      </View>
+      <ProductImageFrame
+        uri={item.processedImageUri || item.imageUri}
+        category={item.category}
+        variant="hero"
+        style={{ marginBottom: 12 }}
+      />
 
       <Text style={{ fontSize: 17, fontWeight: '700', color: colors.text, marginBottom: 4 }}>
         {item.name}
