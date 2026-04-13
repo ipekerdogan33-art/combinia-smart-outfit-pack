@@ -4,6 +4,12 @@ export type DetectResult = {
   color?: string;
   color_name?: string;
   confidence?: number;
+  is_product_only?: boolean;
+  product_only?: boolean;
+  background_objects?: string[];
+  rejection_reason?: string;
+  mask_confidence?: number;
+  foreground_confidence?: number;
   dimensions?: { width: number; height: number };
   image_base64?: string;
 };

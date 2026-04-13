@@ -8,8 +8,8 @@ import { getWardrobeItems, updateWardrobeItem } from '../../lib/wardrobeStorage'
 import { CANONICAL_CATEGORIES, CATEGORY_SUBCATEGORY_MAP, OCCASIONS } from '../../constants/catalog';
 import { CanonicalCategory, CanonicalSubcategory, Occasion } from '../../types/catalog';
 import { WardrobeItem } from '../../types/wardrobe';
+import { getMaterialConfig } from '../../lib/materialOptions';
 
-const FABRIC_OPTIONS = ['Pamuk', 'Keten', 'Denim', 'Yün', 'Triko', 'Saten', 'Deri', 'Teknik Kumaş'];
 const FIT_OPTIONS = ['Slim', 'Regular', 'Oversize', 'Relaxed', 'Structured'];
 const PATTERN_OPTIONS = ['Düz', 'Çizgili', 'Ekose', 'Desenli'];
 
@@ -81,6 +81,13 @@ export default function EditWardrobeItemScreen() {
     () => (category ? CATEGORY_SUBCATEGORY_MAP[category] : []),
     [category]
   );
+  const materialConfig = useMemo(() => getMaterialConfig(category), [category]);
+
+  useEffect(() => {
+    if (fabric && !materialConfig.options.includes(fabric)) {
+      setFabric('');
+    }
+  }, [category, fabric, materialConfig.options]);
 
   const isReady = !!item && !!category && !!subcategory && !!name.trim() && selectedOccasions.length > 0;
 
@@ -135,7 +142,7 @@ export default function EditWardrobeItemScreen() {
         </Text>
 
         <Text style={{ fontSize: 16, lineHeight: 24, color: colors.textSecondary, marginBottom: 24 }}>
-          Kumaş, fit ve desen bilgilerini güncellersen kombin önerileri daha iyi olur.
+          Kumaş veya malzeme, fit ve desen bilgilerini güncellersen kombin önerileri daha iyi olur.
         </Text>
 
         <Text style={{ fontSize: 18, fontWeight: '700', color: colors.text, marginBottom: 12 }}>
@@ -187,11 +194,11 @@ export default function EditWardrobeItemScreen() {
         </View>
 
         <Text style={{ fontSize: 18, fontWeight: '700', color: colors.text, marginBottom: 12 }}>
-          Kumaş
+          {materialConfig.label}
         </Text>
 
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: 20 }}>
-          {FABRIC_OPTIONS.map((entry) => (
+          {materialConfig.options.map((entry) => (
             <ChoiceChip
               key={entry}
               label={entry}

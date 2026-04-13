@@ -22,15 +22,14 @@ const DEFAULT_APPAREL: MaterialConfig = {
 const FOOTWEAR: MaterialConfig = {
   label: 'Malzeme',
   options: [
-    'Deri',
     'Süet',
+    'Deri',
     'Nubuk',
     'Rugan',
     'Suni Deri',
     'Kanvas',
-    'Kumaş',
-    'Hasır',
     'File',
+    'Hasır',
   ],
 };
 

@@ -1,17 +1,32 @@
 import { router, useFocusEffect } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import colors from '../../theme/colors';
 import { getWardrobeItems } from '../../lib/wardrobeStorage';
 import ShellSectionCard from '../../components/ShellSectionCard';
 import { WardrobeItem } from '../../types/wardrobe';
+import WardrobeHealthCard from '../../components/WardrobeHealthCard';
+import ImageQualityHealthCard from '../../components/ImageQualityHealthCard';
+import BackgroundCleanupEntryCard from '../../components/BackgroundCleanupEntryCard';
+import MostWornItemsCard from '../../components/MostWornItemsCard';
+import WardrobeInsightsCard from '../../components/WardrobeInsightsCard';
+import { analyzeImageQuality } from '../../lib/imageQualityAudit';
+import { analyzeWardrobe } from '../../lib/wardrobeInsights';
+import { getWearHistory, WearHistoryEntry } from '../../lib/wearHistoryStorage';
+import WearHistorySummaryCard from '../../components/WearHistorySummaryCard';
 
 export default function ShellClosetScreen() {
   const [items, setItems] = useState<WardrobeItem[]>([]);
+  const [latestWearEntry, setLatestWearEntry] = useState<WearHistoryEntry | null>(null);
 
   const load = useCallback(async () => {
-    const data = await getWardrobeItems();
-    setItems(data);
+    const [wardrobeItems, wearHistory] = await Promise.all([
+      getWardrobeItems(),
+      getWearHistory(),
+    ]);
+
+    setItems(wardrobeItems);
+    setLatestWearEntry(wearHistory[0] || null);
   }, []);
 
   useFocusEffect(
@@ -21,7 +36,16 @@ export default function ShellClosetScreen() {
   );
 
   const cleanCount = items.filter((item) => (item.status || 'Temiz') === 'Temiz').length;
+  const dirtyCount = items.filter((item) => item.status === 'Kirli').length;
+  const dryCleaningCount = items.filter((item) => item.status === 'Kuru Temizlemede').length;
   const favoriteCount = items.filter((item) => item.isFavorite).length;
+  const imageAudit = useMemo(() => analyzeImageQuality(items), [items]);
+  const insights = useMemo(() => analyzeWardrobe(items), [items]);
+  const latestWearItemNames = useMemo(() => {
+    if (!latestWearEntry) return [];
+    const nameMap = new Map(items.map((item) => [item.id, item.name]));
+    return latestWearEntry.itemIds.map((id) => nameMap.get(id) || 'Parça');
+  }, [items, latestWearEntry]);
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
@@ -31,7 +55,6 @@ export default function ShellClosetScreen() {
             fontSize: 30,
             fontWeight: '700',
             color: colors.text,
-            letterSpacing: -0.5,
             marginBottom: 10,
           }}
         >
@@ -46,7 +69,7 @@ export default function ShellClosetScreen() {
             marginBottom: 20,
           }}
         >
-          Gardırobunun hızlı görünümü ve ana aksiyonları burada.
+          Ürün ekleme, temiz PNG kalitesi ve gardırop sağlığı burada.
         </Text>
 
         <ShellSectionCard
@@ -57,11 +80,36 @@ export default function ShellClosetScreen() {
         />
 
         <ShellSectionCard
-          title="Yeni parça ekle"
-          description="Arka planı kaldırma, algılama ve kategori seçimi akışına buradan gidebilirsin."
+          title="Yeni ürün ekle"
+          description="Fotoğraf önce ürün ayrıştırma onayından geçer; yalnızca ürün kalırsa kayıt açılır."
           cta="Ürün Ekle"
           onPress={() => router.push('/wardrobe/add')}
         />
+
+        <ImageQualityHealthCard
+          audit={imageAudit}
+          onPress={() => router.push('/background-cleanup')}
+        />
+
+        <BackgroundCleanupEntryCard onPress={() => router.push('/background-cleanup')} />
+
+        <WardrobeHealthCard
+          totalCount={items.length}
+          cleanCount={cleanCount}
+          dirtyCount={dirtyCount}
+          dryCleaningCount={dryCleaningCount}
+        />
+
+        <WearHistorySummaryCard
+          entry={latestWearEntry}
+          itemNames={latestWearItemNames}
+        />
+
+        {!!insights.mostWornItems.length && (
+          <MostWornItemsCard items={insights.mostWornItems} />
+        )}
+
+        <WardrobeInsightsCard insights={insights} />
       </ScrollView>
     </View>
   );

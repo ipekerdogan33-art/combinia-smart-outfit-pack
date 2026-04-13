@@ -358,7 +358,7 @@ export default function BackgroundCleanupScreen() {
               <VisualPriorityItemCard
                 key={item.itemId}
                 item={item}
-                onPress={() => handleSingle(item)}
+                onProcess={() => handleSingle(item)}
               />
             ))}
           </>

@@ -2,7 +2,7 @@ import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import colors from '../../theme/colors';
-import { getOnboardingProfile } from '../../lib/storage';
+import { clearOnboardingProfile, getOnboardingProfile } from '../../lib/storage';
 import { getPlanSummary } from '../../lib/accessControl';
 import { OnboardingData } from '../../types/onboarding';
 import { AppPlan } from '../../types/access';
@@ -13,6 +13,13 @@ import { getUserSettings, updateUserSettings } from '../../lib/settingsStorage';
 import { UserSettings } from '../../types/settings';
 import { router } from 'expo-router';
 import { fetchWeatherContextForCity, AutoWeatherContext } from '../../lib/weatherService';
+import { getWardrobeItems } from '../../lib/wardrobeStorage';
+import {
+  deriveOutfitLearningInsights,
+  getOutfitFeedbackState,
+  OutfitLearningInsights,
+} from '../../lib/outfitFeedbackStorage';
+import StyleLearningCard from '../../components/StyleLearningCard';
 
 function SettingToggleRow({
   label,
@@ -82,11 +89,16 @@ export default function ShellProfileScreen() {
   const [settings, setSettings] = useState<UserSettings | null>(null);
   const [weatherPreview, setWeatherPreview] = useState<AutoWeatherContext | null>(null);
   const [cityInput, setCityInput] = useState('İstanbul');
+  const [learningInsights, setLearningInsights] = useState<OutfitLearningInsights | null>(null);
 
   const load = useCallback(async () => {
-    const p = await getOnboardingProfile();
-    const summary = await getPlanSummary();
-    const userSettings = await getUserSettings();
+    const [p, summary, userSettings, wardrobeItems, feedbackState] = await Promise.all([
+      getOnboardingProfile(),
+      getPlanSummary(),
+      getUserSettings(),
+      getWardrobeItems(),
+      getOutfitFeedbackState(),
+    ]);
 
     setProfile(p);
     setPlan(summary.plan);
@@ -94,6 +106,7 @@ export default function ShellProfileScreen() {
     setLimit(summary.limit);
     setSettings(userSettings);
     setCityInput(userSettings.weatherCity);
+    setLearningInsights(deriveOutfitLearningInsights(feedbackState, wardrobeItems));
 
     if (userSettings.weatherCity) {
       try {
@@ -128,6 +141,11 @@ export default function ShellProfileScreen() {
     }
   };
 
+  const handleResetProfile = async () => {
+    await clearOnboardingProfile();
+    setProfile(null);
+  };
+
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <ScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 80, paddingBottom: 40 }}>
@@ -157,7 +175,10 @@ export default function ShellProfileScreen() {
         <PlanStatusCard plan={plan} remaining={remaining} limit={limit} />
 
         {!!profile ? (
-          <ProfilePreviewCard profile={profile} />
+          <>
+            <ProfilePreviewCard profile={profile} />
+            {!!learningInsights && <StyleLearningCard insights={learningInsights} />}
+          </>
         ) : (
           <ShellSectionCard
             title="Profil henüz hazır değil"
@@ -281,6 +302,22 @@ export default function ShellProfileScreen() {
           cta="Try-On Alanını Aç"
           onPress={() => router.push('/tryon')}
         />
+
+        {!!profile && (
+          <Pressable
+            onPress={handleResetProfile}
+            style={{
+              backgroundColor: '#F3ECE4',
+              paddingVertical: 16,
+              borderRadius: 18,
+              alignItems: 'center',
+            }}
+          >
+            <Text style={{ color: colors.text, fontSize: 15, fontWeight: '700' }}>
+              Profili Sıfırla
+            </Text>
+          </Pressable>
+        )}
       </ScrollView>
     </View>
   );

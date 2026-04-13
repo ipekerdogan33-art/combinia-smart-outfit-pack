@@ -9,6 +9,7 @@ export type ModeReadiness = {
   completion: number;
   supportedTemplates: number;
   totalTemplates: number;
+  missingSlotKeys: OutfitSlot[];
   missingSlots: string[];
   bestTemplateLabel: string;
 };
@@ -49,6 +50,7 @@ export function analyzeModeReadiness(items: WardrobeItem[]): ModeReadiness[] {
     const templates = MODE_TEMPLATES[occasion];
     let supportedTemplates = 0;
     let bestCompletion = 0;
+    let bestMissingSlotKeys: OutfitSlot[] = [];
     let bestMissingSlots: string[] = [];
     let bestTemplateLabel = templates[0]?.label || occasion;
 
@@ -68,6 +70,7 @@ export function analyzeModeReadiness(items: WardrobeItem[]): ModeReadiness[] {
 
       if (completion >= bestCompletion) {
         bestCompletion = completion;
+        bestMissingSlotKeys = missing;
         bestMissingSlots = missing.map((slot) => SLOT_LABELS[slot]);
         bestTemplateLabel = template.label;
       }
@@ -79,6 +82,7 @@ export function analyzeModeReadiness(items: WardrobeItem[]): ModeReadiness[] {
       completion: bestCompletion,
       supportedTemplates,
       totalTemplates: templates.length,
+      missingSlotKeys: [...new Set(bestMissingSlotKeys)],
       missingSlots: [...new Set(bestMissingSlots)],
       bestTemplateLabel,
     };

@@ -12,6 +12,9 @@ import { addShoppingListItem } from '../../lib/shoppingListStorage';
 import { buildShoppingScreenState } from '../../lib/shoppingSuggestions';
 import ActionCenterSummaryCard from '../../components/ActionCenterSummaryCard';
 import ActionTaskCard from '../../components/ActionTaskCard';
+import ShoppingEntryCard from '../../components/ShoppingEntryCard';
+import CareEntryCard from '../../components/CareEntryCard';
+import BackgroundCleanupEntryCard from '../../components/BackgroundCleanupEntryCard';
 
 export default function ActionCenterScreen() {
   const [state, setState] = useState<ActionCenterState | null>(null);
@@ -124,6 +127,10 @@ export default function ActionCenterScreen() {
         </Text>
 
         <ActionCenterSummaryCard summary={state.summary} />
+
+        <ShoppingEntryCard onPress={() => router.push('/shopping')} />
+        <CareEntryCard onPress={() => router.push('/care')} />
+        <BackgroundCleanupEntryCard onPress={() => router.push('/background-cleanup')} />
 
         {state.tasks.map((task) => (
           <ActionTaskCard

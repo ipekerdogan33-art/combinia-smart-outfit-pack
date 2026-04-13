@@ -1,20 +1,4 @@
 import { WardrobeCategory } from '../types/wardrobe';
+import { CANONICAL_CATEGORIES } from './catalog';
 
-export const wardrobeCategories: WardrobeCategory[] = [
-  'Dış Giyim',
-  'Ceket',
-  'Takım',
-  'Elbise',
-  'Etek',
-  'Gömlek',
-  'Bluz',
-  'Body',
-  'Tişört',
-  'Kazak / Hırka',
-  'Pantolon',
-  'Şort',
-  'Spor',
-  'Ayakkabı',
-  'Çanta',
-  'Aksesuar',
-];
+export const wardrobeCategories: WardrobeCategory[] = [...CANONICAL_CATEGORIES];

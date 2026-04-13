@@ -40,7 +40,7 @@ export function analyzeWardrobe(items: WardrobeItem[]): WardrobeInsights {
     !hasItem(
       items,
       (item) =>
-        ['Gömlek', 'Bluz'].includes(item.category) &&
+        ['Gömlek', 'Bluz'].includes(item.subcategory) &&
         colorIn(item, ['beyaz', 'krem', 'ekru'])
     )
   ) {
@@ -54,7 +54,9 @@ export function analyzeWardrobe(items: WardrobeItem[]): WardrobeInsights {
   if (
     !hasItem(
       items,
-      (item) => item.category === 'Pantolon' && colorIn(item, ['siyah', 'lacivert'])
+      (item) =>
+        ['Pantolon', 'Straight Jean', 'Wide Leg Pantolon'].includes(item.subcategory) &&
+        colorIn(item, ['siyah', 'lacivert'])
     )
   ) {
     missingEssentials.push({

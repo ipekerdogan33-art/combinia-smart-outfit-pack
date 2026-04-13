@@ -1,19 +1,27 @@
-import * as ImageManipulator from 'expo-image-manipulator';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Dimensions,
+  GestureResponderEvent,
   Image,
-  PanResponder,
   Pressable,
+  ScrollView,
   Text,
   View,
 } from 'react-native';
 import colors from '../../theme/colors';
+import { ProductSelectionPoint } from '../../lib/backgroundProcessing';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const FRAME_WIDTH = SCREEN_WIDTH - 48;
-const FRAME_HEIGHT = Math.round(FRAME_WIDTH * 1.2);
+const FRAME_HEIGHT = Math.round(FRAME_WIDTH * 1.25);
+const MIN_SELECTION_POINTS = 4;
+const MAX_SELECTION_POINTS = 16;
+
+type DisplayPoint = ProductSelectionPoint & {
+  displayX: number;
+  displayY: number;
+};
 
 export default function WardrobeIsolateScreen() {
   const params = useLocalSearchParams<{
@@ -25,9 +33,7 @@ export default function WardrobeIsolateScreen() {
 
   const imageUri = params.imageUri || '';
   const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
-  const [zoom, setZoom] = useState(1);
-  const [offset, setOffset] = useState({ x: 0, y: 0 });
-  const startOffset = useRef({ x: 0, y: 0 });
+  const [points, setPoints] = useState<ProductSelectionPoint[]>([]);
 
   useEffect(() => {
     if (!imageUri) return;
@@ -39,89 +45,79 @@ export default function WardrobeIsolateScreen() {
     );
   }, [imageUri]);
 
-  const baseScale = useMemo(() => {
-    if (!imageSize.width || !imageSize.height) return 1;
-    return Math.max(FRAME_WIDTH / imageSize.width, FRAME_HEIGHT / imageSize.height);
-  }, [imageSize]);
+  const imageFrame = useMemo(() => {
+    if (!imageSize.width || !imageSize.height) {
+      return {
+        width: FRAME_WIDTH,
+        height: FRAME_HEIGHT,
+        left: 0,
+        top: 0,
+      };
+    }
 
-  const currentScale = baseScale * zoom;
-  const displayWidth = imageSize.width * currentScale;
-  const displayHeight = imageSize.height * currentScale;
-
-  const clampOffset = (x: number, y: number, nextZoom = zoom) => {
-    const nextScale = baseScale * nextZoom;
-    const nextWidth = imageSize.width * nextScale;
-    const nextHeight = imageSize.height * nextScale;
-
-    const maxX = Math.max(0, (nextWidth - FRAME_WIDTH) / 2);
-    const maxY = Math.max(0, (nextHeight - FRAME_HEIGHT) / 2);
+    const scale = Math.min(FRAME_WIDTH / imageSize.width, FRAME_HEIGHT / imageSize.height);
+    const width = imageSize.width * scale;
+    const height = imageSize.height * scale;
 
     return {
-      x: Math.max(-maxX, Math.min(maxX, x)),
-      y: Math.max(-maxY, Math.min(maxY, y)),
+      width,
+      height,
+      left: (FRAME_WIDTH - width) / 2,
+      top: (FRAME_HEIGHT - height) / 2,
     };
-  };
+  }, [imageSize]);
 
-  const panResponder = useMemo(
+  const displayPoints = useMemo<DisplayPoint[]>(
     () =>
-      PanResponder.create({
-        onStartShouldSetPanResponder: () => true,
-        onMoveShouldSetPanResponder: () => true,
-        onPanResponderGrant: () => {
-          startOffset.current = offset;
-        },
-        onPanResponderMove: (_, gestureState) => {
-          const next = clampOffset(
-            startOffset.current.x + gestureState.dx,
-            startOffset.current.y + gestureState.dy
-          );
-          setOffset(next);
-        },
-      }),
-    [offset, zoom, baseScale, imageSize]
+      points.map((point) => ({
+        ...point,
+        displayX: imageFrame.left + point.x * imageFrame.width,
+        displayY: imageFrame.top + point.y * imageFrame.height,
+      })),
+    [imageFrame, points]
   );
 
-  const handleZoom = (delta: number) => {
-    const nextZoom = Math.max(1, Math.min(3, zoom + delta));
-    const nextOffset = clampOffset(offset.x, offset.y, nextZoom);
-    setZoom(nextZoom);
-    setOffset(nextOffset);
+  const addPoint = (event: GestureResponderEvent) => {
+    if (points.length >= MAX_SELECTION_POINTS) return;
+
+    const { locationX, locationY } = event.nativeEvent;
+    const xInImage = locationX - imageFrame.left;
+    const yInImage = locationY - imageFrame.top;
+
+    if (
+      xInImage < 0 ||
+      yInImage < 0 ||
+      xInImage > imageFrame.width ||
+      yInImage > imageFrame.height
+    ) {
+      return;
+    }
+
+    setPoints((current) => [
+      ...current,
+      {
+        x: Number((xInImage / imageFrame.width).toFixed(4)),
+        y: Number((yInImage / imageFrame.height).toFixed(4)),
+      },
+    ]);
   };
 
-  const handleDone = async () => {
-    if (!imageUri || !imageSize.width || !imageSize.height) return;
+  const undoPoint = () => {
+    setPoints((current) => current.slice(0, -1));
+  };
 
-    const topLeftX = (FRAME_WIDTH - displayWidth) / 2 + offset.x;
-    const topLeftY = (FRAME_HEIGHT - displayHeight) / 2 + offset.y;
+  const clearPoints = () => {
+    setPoints([]);
+  };
 
-    const originX = Math.max(0, (0 - topLeftX) / currentScale);
-    const originY = Math.max(0, (0 - topLeftY) / currentScale);
-    const width = Math.min(imageSize.width - originX, FRAME_WIDTH / currentScale);
-    const height = Math.min(imageSize.height - originY, FRAME_HEIGHT / currentScale);
-
-    const result = await ImageManipulator.manipulateAsync(
-      imageUri,
-      [
-        {
-          crop: {
-            originX: Math.round(originX),
-            originY: Math.round(originY),
-            width: Math.round(width),
-            height: Math.round(height),
-          },
-        },
-      ],
-      {
-        compress: 1,
-        format: ImageManipulator.SaveFormat.PNG,
-      }
-    );
+  const handleDone = () => {
+    if (!imageUri || points.length < MIN_SELECTION_POINTS) return;
 
     router.replace({
       pathname: '/wardrobe/add',
       params: {
         originalUri: imageUri,
-        isolatedUri: result.uri,
+        selectionPoints: JSON.stringify(points),
         imageToken: Date.now().toString(),
         category: params.category || '',
         subcategory: params.subcategory || '',
@@ -146,123 +142,162 @@ export default function WardrobeIsolateScreen() {
     );
   }
 
+  const isReady = points.length >= MIN_SELECTION_POINTS;
+
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background, paddingTop: 80, paddingHorizontal: 24 }}>
-      <Text
-        style={{
-          fontSize: 30,
-          fontWeight: '700',
-          color: colors.text,
-          marginBottom: 10,
-        }}
-      >
-        Güvenli Alan
-      </Text>
-
-      <Text
-        style={{
-          fontSize: 16,
-          lineHeight: 24,
-          color: colors.textSecondary,
-          marginBottom: 18,
-        }}
-      >
-        Yalnızca ürünü kadraj içine al. Kapı, sandalye veya çevre alan mümkün olduğunca dışarıda kalsın.
-      </Text>
-
-      <View
-        style={{
-          width: FRAME_WIDTH,
-          height: FRAME_HEIGHT,
-          borderRadius: 24,
-          overflow: 'hidden',
-          backgroundColor: '#F6F2EC',
-          alignSelf: 'center',
-          marginBottom: 16,
-        }}
-        {...panResponder.panHandlers}
-      >
-        <Image
-          source={{ uri: imageUri }}
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      <ScrollView contentContainerStyle={{ paddingTop: 80, paddingHorizontal: 24, paddingBottom: 32 }}>
+        <Text
           style={{
-            position: 'absolute',
-            width: displayWidth,
-            height: displayHeight,
-            left: (FRAME_WIDTH - displayWidth) / 2 + offset.x,
-            top: (FRAME_HEIGHT - displayHeight) / 2 + offset.y,
+            fontSize: 30,
+            fontWeight: '700',
+            color: colors.text,
+            marginBottom: 10,
           }}
-          resizeMode="stretch"
-        />
+        >
+          Ürünü Ayır
+        </Text>
 
-        <View
-          pointerEvents="none"
+        <Text
           style={{
-            position: 'absolute',
-            inset: 0,
-            borderWidth: 2,
-            borderColor: '#000',
+            fontSize: 16,
+            lineHeight: 24,
+            color: colors.textSecondary,
+            marginBottom: 18,
+          }}
+        >
+          Yalnızca ürünün dış hattına dokun. Kapı, sandalye, duvar, askı ve zemin seçim dışında kalmalı.
+        </Text>
+
+        <Pressable
+          onPress={addPoint}
+          style={{
+            width: FRAME_WIDTH,
+            height: FRAME_HEIGHT,
             borderRadius: 24,
-          }}
-        />
-      </View>
-
-      <View style={{ flexDirection: 'row', marginBottom: 16 }}>
-        <Pressable
-          onPress={() => handleZoom(-0.15)}
-          style={{
-            flex: 1,
-            backgroundColor: '#F3EFE9',
-            paddingVertical: 14,
-            borderRadius: 16,
-            alignItems: 'center',
-            marginRight: 8,
+            overflow: 'hidden',
+            backgroundColor: '#F6F2EC',
+            alignSelf: 'center',
+            marginBottom: 16,
           }}
         >
-          <Text style={{ color: colors.text, fontWeight: '700' }}>Uzaklaştır</Text>
+          <Image
+            source={{ uri: imageUri }}
+            style={{
+              position: 'absolute',
+              width: imageFrame.width,
+              height: imageFrame.height,
+              left: imageFrame.left,
+              top: imageFrame.top,
+            }}
+            resizeMode="contain"
+          />
+
+          <View
+            pointerEvents="none"
+            style={{
+              position: 'absolute',
+              left: imageFrame.left,
+              top: imageFrame.top,
+              width: imageFrame.width,
+              height: imageFrame.height,
+              borderWidth: points.length ? 1 : 0,
+              borderColor: 'rgba(17, 17, 17, 0.16)',
+            }}
+          />
+
+          {displayPoints.map((point, index) => (
+            <View
+              key={`${point.x}-${point.y}-${index}`}
+              pointerEvents="none"
+              style={{
+                position: 'absolute',
+                left: point.displayX - 13,
+                top: point.displayY - 13,
+                width: 26,
+                height: 26,
+                borderRadius: 13,
+                backgroundColor: colors.primary,
+                borderWidth: 2,
+                borderColor: '#fff',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Text style={{ color: '#fff', fontSize: 11, fontWeight: '700' }}>
+                {index + 1}
+              </Text>
+            </View>
+          ))}
+        </Pressable>
+
+        <Text style={{ color: colors.textSecondary, lineHeight: 20, marginBottom: 16 }}>
+          {isReady
+            ? 'Seçim hazır. Şimdi sistem yalnızca ürün kalıp kalmadığını doğrulayacak.'
+            : `En az ${MIN_SELECTION_POINTS} nokta seç. Seçilen nokta: ${points.length}`}
+        </Text>
+
+        <View style={{ flexDirection: 'row', marginBottom: 16 }}>
+          <Pressable
+            onPress={undoPoint}
+            disabled={!points.length}
+            style={{
+              flex: 1,
+              backgroundColor: points.length ? '#F3EFE9' : colors.disabled,
+              paddingVertical: 14,
+              borderRadius: 16,
+              alignItems: 'center',
+              marginRight: 8,
+            }}
+          >
+            <Text style={{ color: colors.text, fontWeight: '700' }}>Son Noktayı Sil</Text>
+          </Pressable>
+
+          <Pressable
+            onPress={clearPoints}
+            disabled={!points.length}
+            style={{
+              flex: 1,
+              backgroundColor: points.length ? '#F3EFE9' : colors.disabled,
+              paddingVertical: 14,
+              borderRadius: 16,
+              alignItems: 'center',
+            }}
+          >
+            <Text style={{ color: colors.text, fontWeight: '700' }}>Seçimi Temizle</Text>
+          </Pressable>
+        </View>
+
+        <Pressable
+          onPress={handleDone}
+          disabled={!isReady}
+          style={{
+            backgroundColor: isReady ? colors.primary : colors.disabled,
+            paddingVertical: 16,
+            borderRadius: 18,
+            alignItems: 'center',
+            marginBottom: 12,
+          }}
+        >
+          <Text style={{ color: '#fff', fontWeight: '700', fontSize: 15 }}>
+            Ürünü Ayrıştır
+          </Text>
         </Pressable>
 
         <Pressable
-          onPress={() => handleZoom(0.15)}
+          onPress={() => router.back()}
           style={{
-            flex: 1,
             backgroundColor: '#F3EFE9',
-            paddingVertical: 14,
-            borderRadius: 16,
+            paddingVertical: 16,
+            borderRadius: 18,
             alignItems: 'center',
           }}
         >
-          <Text style={{ color: colors.text, fontWeight: '700' }}>Yakınlaştır</Text>
+          <Text style={{ color: colors.text, fontWeight: '700', fontSize: 15 }}>
+            Geri Dön
+          </Text>
         </Pressable>
-      </View>
-
-      <Pressable
-        onPress={handleDone}
-        style={{
-          backgroundColor: colors.primary,
-          paddingVertical: 16,
-          borderRadius: 18,
-          alignItems: 'center',
-          marginBottom: 12,
-        }}
-      >
-        <Text style={{ color: '#fff', fontWeight: '700', fontSize: 15 }}>
-          Bu Alanı Kullan
-        </Text>
-      </Pressable>
-
-      <Pressable
-        onPress={() => router.back()}
-        style={{
-          backgroundColor: '#F3EFE9',
-          paddingVertical: 16,
-          borderRadius: 18,
-          alignItems: 'center',
-        }}
-      >
-        <Text style={{ color: colors.text, fontWeight: '700', fontSize: 15 }}>
-          Geri Dön
-        </Text>
-      </Pressable>
+      </ScrollView>
     </View>
   );
 }

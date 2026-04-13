@@ -34,11 +34,13 @@ function normalize(value?: string) {
 }
 
 function countByCategory(items: WardrobeItem[], categories: string[]) {
-  return items.filter((item) => categories.includes(item.category)).length;
+  return items.filter(
+    (item) => categories.includes(item.category) || categories.includes(item.subcategory)
+  ).length;
 }
 
 function getReviveSuggestion(item: WardrobeItem) {
-  if (['Gömlek', 'Bluz'].includes(item.category)) {
+  if (['Gömlek', 'Bluz'].includes(item.subcategory)) {
     return 'Yüksek bel pantolon veya etekle daha kolay kombinlenebilir.';
   }
 
@@ -46,7 +48,7 @@ function getReviveSuggestion(item: WardrobeItem) {
     return 'Düz tişört ve koyu alt parçayla odak parça gibi kullanılabilir.';
   }
 
-  if (item.category === 'Etek') {
+  if (['Mini Etek', 'Midi Etek', 'Maxi Etek'].includes(item.subcategory)) {
     return 'Nötr üst ve loafer/sneaker ile daha günlük hale getirilebilir.';
   }
 
@@ -62,11 +64,11 @@ function getReviveSuggestion(item: WardrobeItem) {
 }
 
 function getDuplicateSuggestion(category: string) {
-  if (category === 'Pantolon') {
+  if (category === 'Alt') {
     return 'Bir sonraki alışverişte farklı kesim veya ton düşünmek daha iyi çeşitlilik sağlar.';
   }
 
-  if (category === 'Tişört' || category === 'Gömlek' || category === 'Bluz') {
+  if (category === 'Üst') {
     return 'Bu kategoride farklı renk ailesi veya farklı siluet eklemek dolabı güçlendirir.';
   }
 
