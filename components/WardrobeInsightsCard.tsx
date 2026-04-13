@@ -12,8 +12,8 @@ export default function WardrobeInsightsCard({
       <View
         style={{
           backgroundColor: colors.surface,
-          borderRadius: 22,
-          padding: 18,
+          borderRadius: 8,
+          padding: 20,
           borderWidth: 1,
           borderColor: colors.borderSoft,
           marginBottom: 16,
@@ -47,8 +47,8 @@ export default function WardrobeInsightsCard({
     <View
       style={{
         backgroundColor: colors.surface,
-        borderRadius: 22,
-        padding: 18,
+        borderRadius: 8,
+        padding: 20,
         borderWidth: 1,
         borderColor: colors.borderSoft,
         marginBottom: 16,
@@ -81,7 +81,7 @@ export default function WardrobeInsightsCard({
           key={item.id}
           style={{
             backgroundColor: '#F7F2EB',
-            borderRadius: 16,
+            borderRadius: 8,
             padding: 14,
             marginBottom: 10,
           }}

@@ -1,4 +1,4 @@
-import { useFocusEffect } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import colors from '../../theme/colors';
@@ -9,9 +9,9 @@ import { AppPlan } from '../../types/access';
 import ProfilePreviewCard from '../../components/ProfilePreviewCard';
 import PlanStatusCard from '../../components/PlanStatusCard';
 import ShellSectionCard from '../../components/ShellSectionCard';
+import ShellScreenHeader from '../../components/ShellScreenHeader';
 import { getUserSettings, updateUserSettings } from '../../lib/settingsStorage';
 import { UserSettings } from '../../types/settings';
-import { router } from 'expo-router';
 import { fetchWeatherContextForCity, AutoWeatherContext } from '../../lib/weatherService';
 import { getWardrobeItems } from '../../lib/wardrobeStorage';
 import {
@@ -152,27 +152,11 @@ export default function ShellProfileScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <ScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 80, paddingBottom: 40 }}>
-        <Text
-          style={{
-            fontSize: 30,
-            fontWeight: '700',
-            color: colors.text,
-            marginBottom: 8,
-          }}
-        >
-          Profile
-        </Text>
-
-        <Text
-          style={{
-            fontSize: 16,
-            lineHeight: 23,
-            color: colors.textSecondary,
-            marginBottom: 22,
-          }}
-        >
-          Profil, plan ve kişisel tercihlerin burada.
-        </Text>
+        <ShellScreenHeader
+          eyebrow="PROFILE"
+          title="Profil ve Plan"
+          description="Stil profilin, plan durumun ve kişisel tercihlerin."
+        />
 
         <SectionLabel title="PLAN" />
         <PlanStatusCard plan={plan} remaining={remaining} limit={limit} />
@@ -197,8 +181,8 @@ export default function ShellProfileScreen() {
               borderRadius: 8,
               borderWidth: 1,
               borderColor: colors.borderSoft,
-              padding: 18,
-              marginBottom: 18,
+              padding: 20,
+              marginBottom: 16,
             }}
           >
             <SectionLabel title="AYARLAR" />

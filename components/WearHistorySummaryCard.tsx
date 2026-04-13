@@ -17,8 +17,8 @@ export default function WearHistorySummaryCard({
     <View
       style={{
         backgroundColor: colors.surface,
-        borderRadius: 22,
-        padding: 18,
+        borderRadius: 8,
+        padding: 20,
         borderWidth: 1,
         borderColor: colors.borderSoft,
         marginBottom: 16,

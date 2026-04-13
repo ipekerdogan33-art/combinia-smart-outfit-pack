@@ -17,10 +17,10 @@ export default function ShellSectionCard({
       style={{
         backgroundColor: colors.surface,
         borderRadius: 8,
-        padding: 16,
+        padding: 18,
         borderWidth: 1,
         borderColor: colors.borderSoft,
-        marginBottom: 16,
+        marginBottom: 14,
       }}
     >
       <Text
@@ -50,7 +50,7 @@ export default function ShellSectionCard({
           onPress={onPress}
           style={{
             backgroundColor: '#F3EFE9',
-            paddingVertical: 12,
+            paddingVertical: 13,
             borderRadius: 8,
             alignItems: 'center',
           }}

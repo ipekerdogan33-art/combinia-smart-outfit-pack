@@ -7,15 +7,15 @@ export default function ProfilePreviewCard({ profile }: { profile: OnboardingDat
     <View
       style={{
         backgroundColor: colors.surface,
-        borderRadius: 22,
-        padding: 20,
+        borderRadius: 8,
+        padding: 18,
         borderWidth: 1,
         borderColor: colors.borderSoft,
         marginBottom: 16,
         shadowColor: '#000',
-        shadowOpacity: 0.08,
-        shadowRadius: 12,
-        elevation: 5,
+        shadowOpacity: 0.04,
+        shadowRadius: 8,
+        elevation: 2,
       }}
     >
       <Text style={{ fontSize: 18, fontWeight: '700', color: colors.text, marginBottom: 10 }}>

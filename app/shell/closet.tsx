@@ -12,6 +12,7 @@ import { analyzeImageQuality } from '../../lib/imageQualityAudit';
 import { analyzeWardrobe } from '../../lib/wardrobeInsights';
 import { getWearHistory, WearHistoryEntry } from '../../lib/wearHistoryStorage';
 import WearHistorySummaryCard from '../../components/WearHistorySummaryCard';
+import ShellScreenHeader from '../../components/ShellScreenHeader';
 
 function SectionLabel({ title }: { title: string }) {
   return (
@@ -37,8 +38,8 @@ function ClosetCommandPanel({
         borderRadius: 8,
         borderWidth: 1,
         borderColor: colors.borderSoft,
-        padding: 18,
-        marginBottom: 22,
+        padding: 20,
+        marginBottom: 24,
       }}
     >
       <Text style={{ color: colors.text, fontSize: 22, fontWeight: '700', marginBottom: 8 }}>
@@ -116,13 +117,11 @@ export default function ShellClosetScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <ScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 80, paddingBottom: 40 }}>
-        <Text style={{ fontSize: 30, fontWeight: '700', color: colors.text, marginBottom: 8 }}>
-          Closet
-        </Text>
-
-        <Text style={{ fontSize: 16, lineHeight: 23, color: colors.textSecondary, marginBottom: 22 }}>
-          Ürün kalitesi, dolap sağlığı ve ekleme akışı.
-        </Text>
+        <ShellScreenHeader
+          eyebrow="CLOSET"
+          title="Dolap Kalitesi"
+          description="Ürün kalitesi, dolap sağlığı ve ekleme akışı tek yerde."
+        />
 
         <ClosetCommandPanel
           totalCount={items.length}

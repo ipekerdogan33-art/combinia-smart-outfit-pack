@@ -19,11 +19,11 @@ export default function PlanStatusCard({
     <View
       style={{
         backgroundColor: colors.surface,
-        borderRadius: 18,
+        borderRadius: 8,
         borderWidth: 1,
         borderColor: colors.borderSoft,
-        padding: 16,
-        marginBottom: 18,
+        padding: 18,
+        marginBottom: 16,
       }}
     >
       <Text
@@ -56,7 +56,7 @@ export default function PlanStatusCard({
           style={{
             backgroundColor: '#F3EFE9',
             paddingVertical: 12,
-            borderRadius: 14,
+            borderRadius: 8,
             alignItems: 'center',
           }}
         >

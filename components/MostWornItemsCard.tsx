@@ -13,8 +13,8 @@ export default function MostWornItemsCard({
     <View
       style={{
         backgroundColor: colors.surface,
-        borderRadius: 22,
-        padding: 18,
+        borderRadius: 8,
+        padding: 20,
         borderWidth: 1,
         borderColor: colors.borderSoft,
         marginBottom: 16,
@@ -49,7 +49,7 @@ export default function MostWornItemsCard({
             flexDirection: 'row',
             alignItems: 'center',
             backgroundColor: '#F7F2EB',
-            borderRadius: 16,
+            borderRadius: 8,
             padding: 12,
             marginBottom: 10,
           }}

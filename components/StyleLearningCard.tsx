@@ -9,7 +9,7 @@ function Tag({ label }: { label: string }) {
         backgroundColor: '#F3EFE9',
         paddingHorizontal: 10,
         paddingVertical: 6,
-        borderRadius: 999,
+        borderRadius: 8,
         marginRight: 8,
         marginBottom: 8,
       }}
@@ -36,8 +36,8 @@ export default function StyleLearningCard({
     <View
       style={{
         backgroundColor: colors.surface,
-        borderRadius: 22,
-        padding: 18,
+        borderRadius: 8,
+        padding: 20,
         borderWidth: 1,
         borderColor: colors.borderSoft,
         marginBottom: 16,

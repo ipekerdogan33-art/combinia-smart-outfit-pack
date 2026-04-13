@@ -8,7 +8,7 @@ function CountPill({ label, value }: { label: string; value: number }) {
         backgroundColor: '#F3EFE9',
         paddingHorizontal: 12,
         paddingVertical: 8,
-        borderRadius: 999,
+        borderRadius: 8,
         marginRight: 8,
         marginBottom: 8,
       }}
@@ -35,8 +35,8 @@ export default function WardrobeHealthCard({
     <View
       style={{
         backgroundColor: colors.surface,
-        borderRadius: 22,
-        padding: 18,
+        borderRadius: 8,
+        padding: 20,
         borderWidth: 1,
         borderColor: colors.borderSoft,
         marginBottom: 16,

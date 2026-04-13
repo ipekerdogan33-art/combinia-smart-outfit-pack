@@ -11,11 +11,11 @@ export default function ActionCenterSummaryCard({
     <View
       style={{
         backgroundColor: colors.surface,
-        borderRadius: 22,
-        padding: 18,
+        borderRadius: 8,
+        padding: 20,
         borderWidth: 1,
         borderColor: colors.borderSoft,
-        marginBottom: 16,
+        marginBottom: 18,
       }}
     >
       <Text
@@ -26,7 +26,7 @@ export default function ActionCenterSummaryCard({
           marginBottom: 8,
         }}
       >
-        Öncelik Özeti
+        Bugünkü Durum
       </Text>
 
       <Text
@@ -37,7 +37,7 @@ export default function ActionCenterSummaryCard({
           marginBottom: 14,
         }}
       >
-        Şu anda dikkat isteyen işleri tek yerde görüyorsun.
+        Dikkat isteyen işleri kısa özet halinde görüyorsun.
       </Text>
 
       <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
@@ -54,7 +54,7 @@ export default function ActionCenterSummaryCard({
               backgroundColor: '#F3EFE9',
               paddingHorizontal: 12,
               paddingVertical: 8,
-              borderRadius: 999,
+              borderRadius: 8,
               marginRight: 8,
               marginBottom: 8,
             }}

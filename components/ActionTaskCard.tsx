@@ -20,8 +20,8 @@ export default function ActionTaskCard({
     <View
       style={{
         backgroundColor: colors.surface,
-        borderRadius: 20,
-        padding: 16,
+        borderRadius: 8,
+        padding: 18,
         borderWidth: 1,
         borderColor: colors.borderSoft,
         marginBottom: 14,
@@ -33,7 +33,7 @@ export default function ActionTaskCard({
           backgroundColor: tone.bg,
           paddingHorizontal: 10,
           paddingVertical: 6,
-          borderRadius: 999,
+          borderRadius: 8,
           marginBottom: 10,
         }}
       >
@@ -70,8 +70,8 @@ export default function ActionTaskCard({
           style={{
             flex: 1,
             backgroundColor: colors.primary,
-            paddingVertical: 14,
-            borderRadius: 14,
+            paddingVertical: 13,
+            borderRadius: 8,
             alignItems: 'center',
             marginRight: onSecondary ? 8 : 0,
           }}
@@ -86,9 +86,10 @@ export default function ActionTaskCard({
             onPress={onSecondary}
             style={{
               flex: 1,
-              backgroundColor: '#F3EFE9',
-              paddingVertical: 14,
-              borderRadius: 14,
+              borderWidth: 1,
+              borderColor: colors.borderSoft,
+              paddingVertical: 13,
+              borderRadius: 8,
               alignItems: 'center',
             }}
           >

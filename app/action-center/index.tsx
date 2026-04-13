@@ -12,6 +12,7 @@ import { addShoppingListItem } from '../../lib/shoppingListStorage';
 import { buildShoppingScreenState } from '../../lib/shoppingSuggestions';
 import ActionCenterSummaryCard from '../../components/ActionCenterSummaryCard';
 import ActionTaskCard from '../../components/ActionTaskCard';
+import ShellScreenHeader from '../../components/ShellScreenHeader';
 
 function QuickLinkPanel() {
   const links = [
@@ -23,15 +24,10 @@ function QuickLinkPanel() {
   return (
     <View
       style={{
-        backgroundColor: colors.surface,
-        borderRadius: 8,
-        borderWidth: 1,
-        borderColor: colors.borderSoft,
-        padding: 14,
-        marginBottom: 18,
+        marginBottom: 22,
       }}
     >
-      <Text style={{ color: colors.muted, fontSize: 12, fontWeight: '700', marginBottom: 10 }}>
+      <Text style={{ color: colors.muted, fontSize: 12, fontWeight: '700', marginBottom: 8 }}>
         HIZLI İŞLER
       </Text>
 
@@ -40,7 +36,7 @@ function QuickLinkPanel() {
           key={link.route}
           onPress={() => router.push(link.route as any)}
           style={{
-            paddingVertical: 12,
+            paddingVertical: 13,
             borderTopWidth: index ? 1 : 0,
             borderTopColor: colors.borderSoft,
           }}
@@ -145,27 +141,11 @@ export default function ActionCenterScreen() {
           paddingBottom: 40,
         }}
       >
-        <Text
-          style={{
-            fontSize: 30,
-            fontWeight: '700',
-            color: colors.text,
-            marginBottom: 8,
-          }}
-        >
-          Aksiyon Merkezi
-        </Text>
-
-        <Text
-          style={{
-            fontSize: 16,
-            lineHeight: 23,
-            color: colors.textSecondary,
-            marginBottom: 22,
-          }}
-        >
-          Planner, bakım merkezi ve alışveriş listesi arasında dikkat isteyen konuları burada topluyoruz.
-        </Text>
+        <ShellScreenHeader
+          eyebrow="ACTION CENTER"
+          title="Öncelikler"
+          description="Planner, bakım ve alışverişte dikkat isteyen işler."
+        />
 
         <ActionCenterSummaryCard summary={state.summary} />
 

@@ -6,6 +6,7 @@ import { getOnboardingProfile } from '../lib/storage';
 import { OnboardingData } from '../types/onboarding';
 import { getSavedLooks } from '../lib/savedLooksStorage';
 import { getWardrobeItems } from '../lib/wardrobeStorage';
+import ShellScreenHeader from '../components/ShellScreenHeader';
 import {
   buildDailyHomeRecommendation,
   DailyHomeRecommendation,
@@ -96,8 +97,8 @@ function DailyDecisionPanel({
         borderRadius: 8,
         borderWidth: 1,
         borderColor: colors.borderSoft,
-        padding: 18,
-        marginBottom: 16,
+        padding: 20,
+        marginBottom: 14,
       }}
     >
       <Text style={{ color: colors.muted, fontSize: 12, fontWeight: '700', marginBottom: 8 }}>
@@ -190,13 +191,11 @@ export default function Home() {
           paddingBottom: 40,
         }}
       >
-        <Text style={{ fontSize: 34, fontWeight: '700', color: colors.text, marginBottom: 8 }}>
-          Combinia
-        </Text>
-
-        <Text style={{ fontSize: 16, lineHeight: 23, color: colors.textSecondary, marginBottom: 24 }}>
-          Bugünün planı için tek net karar.
-        </Text>
+        <ShellScreenHeader
+          eyebrow="COMBINIA"
+          title="Bugünün Kararı"
+          description="Günün planı için tek net kombin yönü."
+        />
 
         {profile ? (
           <>
@@ -212,7 +211,7 @@ export default function Home() {
               <PrimaryCta title="Bugün Ne Giymeliyim?" onPress={() => router.push('/outfit/occasion')} />
             )}
 
-            <View style={{ flexDirection: 'row', marginTop: dailyRecommendation ? 0 : 16 }}>
+            <View style={{ flexDirection: 'row', marginTop: dailyRecommendation ? 4 : 16 }}>
               <View style={{ flex: 1, marginRight: 10 }}>
                 <SecondaryCta
                   title={wardrobeCount ? 'Ürün Ekle' : 'İlk Ürünü Ekle'}
