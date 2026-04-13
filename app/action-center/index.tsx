@@ -1,6 +1,6 @@
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Alert, ScrollView, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 import colors from '../../theme/colors';
 import { buildActionCenterState, ActionCenterState, ActionCenterTask } from '../../lib/actionCenterEngine';
 import { getWardrobeItems } from '../../lib/wardrobeStorage';
@@ -12,21 +12,63 @@ import { addShoppingListItem } from '../../lib/shoppingListStorage';
 import { buildShoppingScreenState } from '../../lib/shoppingSuggestions';
 import ActionCenterSummaryCard from '../../components/ActionCenterSummaryCard';
 import ActionTaskCard from '../../components/ActionTaskCard';
-import ShoppingEntryCard from '../../components/ShoppingEntryCard';
-import CareEntryCard from '../../components/CareEntryCard';
-import BackgroundCleanupEntryCard from '../../components/BackgroundCleanupEntryCard';
+
+function QuickLinkPanel() {
+  const links = [
+    { title: 'Alışveriş', detail: 'Eksik parçalar', route: '/shopping' },
+    { title: 'Bakım', detail: 'Kirli ve kuru temizleme', route: '/care' },
+    { title: 'Temiz PNG', detail: 'Görsel kalitesi', route: '/background-cleanup' },
+  ];
+
+  return (
+    <View
+      style={{
+        backgroundColor: colors.surface,
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: colors.borderSoft,
+        padding: 14,
+        marginBottom: 18,
+      }}
+    >
+      <Text style={{ color: colors.muted, fontSize: 12, fontWeight: '700', marginBottom: 10 }}>
+        HIZLI İŞLER
+      </Text>
+
+      {links.map((link, index) => (
+        <Pressable
+          key={link.route}
+          onPress={() => router.push(link.route as any)}
+          style={{
+            paddingVertical: 12,
+            borderTopWidth: index ? 1 : 0,
+            borderTopColor: colors.borderSoft,
+          }}
+        >
+          <Text style={{ color: colors.text, fontSize: 15, fontWeight: '700', marginBottom: 3 }}>
+            {link.title}
+          </Text>
+          <Text style={{ color: colors.textSecondary, fontSize: 13 }}>
+            {link.detail}
+          </Text>
+        </Pressable>
+      ))}
+    </View>
+  );
+}
 
 export default function ActionCenterScreen() {
   const [state, setState] = useState<ActionCenterState | null>(null);
 
   const load = useCallback(async () => {
-    const [wardrobeItems, weeklyPlan, savedLooks, wearHistory, shoppingState] = await Promise.all([
+    const [wardrobeItems, weeklyPlan, savedLooks, wearHistory] = await Promise.all([
       getWardrobeItems(),
       getWeeklyPlan(),
       getSavedLooks(),
       getWearHistory(),
-      (async () => buildShoppingScreenState(await getWardrobeItems()))(),
     ]);
+
+    const shoppingState = await buildShoppingScreenState(wardrobeItems);
 
     const rotationInsights = analyzePlannerRotation(
       weeklyPlan,
@@ -108,8 +150,7 @@ export default function ActionCenterScreen() {
             fontSize: 30,
             fontWeight: '700',
             color: colors.text,
-            letterSpacing: -0.5,
-            marginBottom: 10,
+            marginBottom: 8,
           }}
         >
           Aksiyon Merkezi
@@ -118,9 +159,9 @@ export default function ActionCenterScreen() {
         <Text
           style={{
             fontSize: 16,
-            lineHeight: 24,
+            lineHeight: 23,
             color: colors.textSecondary,
-            marginBottom: 20,
+            marginBottom: 22,
           }}
         >
           Planner, bakım merkezi ve alışveriş listesi arasında dikkat isteyen konuları burada topluyoruz.
@@ -128,9 +169,7 @@ export default function ActionCenterScreen() {
 
         <ActionCenterSummaryCard summary={state.summary} />
 
-        <ShoppingEntryCard onPress={() => router.push('/shopping')} />
-        <CareEntryCard onPress={() => router.push('/care')} />
-        <BackgroundCleanupEntryCard onPress={() => router.push('/background-cleanup')} />
+        <QuickLinkPanel />
 
         {state.tasks.map((task) => (
           <ActionTaskCard

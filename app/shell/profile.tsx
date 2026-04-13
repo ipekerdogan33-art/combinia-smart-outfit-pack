@@ -21,6 +21,14 @@ import {
 } from '../../lib/outfitFeedbackStorage';
 import StyleLearningCard from '../../components/StyleLearningCard';
 
+function SectionLabel({ title }: { title: string }) {
+  return (
+    <Text style={{ color: colors.muted, fontSize: 12, fontWeight: '700', marginBottom: 10 }}>
+      {title}
+    </Text>
+  );
+}
+
 function SettingToggleRow({
   label,
   values,
@@ -35,12 +43,7 @@ function SettingToggleRow({
   return (
     <View
       style={{
-        backgroundColor: colors.surface,
-        borderRadius: 22,
-        padding: 18,
-        borderWidth: 1,
-        borderColor: colors.borderSoft,
-        marginBottom: 16,
+        marginBottom: 18,
       }}
     >
       <Text
@@ -63,7 +66,7 @@ function SettingToggleRow({
               onPress={() => onSelect(value)}
               style={{
                 backgroundColor: active ? colors.primary : '#F3EFE9',
-                borderRadius: 999,
+                borderRadius: 8,
                 paddingHorizontal: 14,
                 paddingVertical: 10,
                 marginRight: 10,
@@ -154,8 +157,7 @@ export default function ShellProfileScreen() {
             fontSize: 30,
             fontWeight: '700',
             color: colors.text,
-            letterSpacing: -0.5,
-            marginBottom: 10,
+            marginBottom: 8,
           }}
         >
           Profile
@@ -164,16 +166,18 @@ export default function ShellProfileScreen() {
         <Text
           style={{
             fontSize: 16,
-            lineHeight: 24,
+            lineHeight: 23,
             color: colors.textSecondary,
-            marginBottom: 20,
+            marginBottom: 22,
           }}
         >
-          Profil, plan, ülke/dil ve try-on tercihleri burada yönetilir.
+          Profil, plan ve kişisel tercihlerin burada.
         </Text>
 
+        <SectionLabel title="PLAN" />
         <PlanStatusCard plan={plan} remaining={remaining} limit={limit} />
 
+        <SectionLabel title="STİL PROFİLİ" />
         {!!profile ? (
           <>
             <ProfilePreviewCard profile={profile} />
@@ -187,7 +191,17 @@ export default function ShellProfileScreen() {
         )}
 
         {!!settings && (
-          <>
+          <View
+            style={{
+              backgroundColor: colors.surface,
+              borderRadius: 8,
+              borderWidth: 1,
+              borderColor: colors.borderSoft,
+              padding: 18,
+              marginBottom: 18,
+            }}
+          >
+            <SectionLabel title="AYARLAR" />
             <SettingToggleRow
               label="Dil"
               values={['TR', 'EN']}
@@ -211,12 +225,7 @@ export default function ShellProfileScreen() {
 
             <View
               style={{
-                backgroundColor: colors.surface,
-                borderRadius: 22,
-                padding: 18,
-                borderWidth: 1,
-                borderColor: colors.borderSoft,
-                marginBottom: 16,
+                marginBottom: 18,
               }}
             >
               <Text
@@ -237,7 +246,7 @@ export default function ShellProfileScreen() {
                 placeholderTextColor={colors.muted}
                 style={{
                   backgroundColor: '#F7F2EB',
-                  borderRadius: 16,
+                  borderRadius: 8,
                   borderWidth: 1,
                   borderColor: colors.borderSoft,
                   paddingHorizontal: 16,
@@ -253,7 +262,7 @@ export default function ShellProfileScreen() {
                 style={{
                   backgroundColor: colors.primary,
                   paddingVertical: 14,
-                  borderRadius: 16,
+                  borderRadius: 8,
                   alignItems: 'center',
                   marginBottom: weatherPreview ? 12 : 0,
                 }}
@@ -267,7 +276,7 @@ export default function ShellProfileScreen() {
                 <View
                   style={{
                     backgroundColor: '#F7F2EB',
-                    borderRadius: 16,
+                    borderRadius: 8,
                     padding: 14,
                   }}
                 >
@@ -293,7 +302,7 @@ export default function ShellProfileScreen() {
               selected={settings.tryOnPreference}
               onSelect={(value) => patchSettings({ tryOnPreference: value as UserSettings['tryOnPreference'] })}
             />
-          </>
+          </View>
         )}
 
         <ShellSectionCard
@@ -309,7 +318,7 @@ export default function ShellProfileScreen() {
             style={{
               backgroundColor: '#F3ECE4',
               paddingVertical: 16,
-              borderRadius: 18,
+              borderRadius: 8,
               alignItems: 'center',
             }}
           >

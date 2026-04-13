@@ -10,55 +10,117 @@ import {
   buildDailyHomeRecommendation,
   DailyHomeRecommendation,
 } from '../lib/homeRecommendation';
-import DailyRecommendationCard from '../components/DailyRecommendationCard';
 import { analyzeImageQuality } from '../lib/imageQualityAudit';
 
-function HomeAction({
+function MetaPill({ label }: { label: string }) {
+  return (
+    <View
+      style={{
+        borderWidth: 1,
+        borderColor: colors.borderSoft,
+        borderRadius: 8,
+        paddingHorizontal: 10,
+        paddingVertical: 6,
+        marginRight: 8,
+        marginBottom: 8,
+      }}
+    >
+      <Text style={{ fontSize: 12, fontWeight: '700', color: colors.text }}>
+        {label}
+      </Text>
+    </View>
+  );
+}
+
+function PrimaryCta({ title, onPress }: { title: string; onPress: () => void }) {
+  return (
+    <Pressable
+      onPress={onPress}
+      style={{
+        backgroundColor: colors.primary,
+        borderRadius: 8,
+        paddingVertical: 16,
+        alignItems: 'center',
+      }}
+    >
+      <Text style={{ color: '#fff', fontSize: 15, fontWeight: '700' }}>
+        {title}
+      </Text>
+    </Pressable>
+  );
+}
+
+function SecondaryCta({
   title,
   detail,
-  primary,
   onPress,
 }: {
   title: string;
-  detail?: string;
-  primary?: boolean;
+  detail: string;
   onPress: () => void;
 }) {
   return (
     <Pressable
       onPress={onPress}
       style={{
-        backgroundColor: primary ? colors.primary : colors.surface,
-        borderRadius: 18,
-        borderWidth: primary ? 0 : 1,
+        flex: 1,
+        borderWidth: 1,
         borderColor: colors.borderSoft,
-        padding: 18,
-        marginBottom: 12,
+        borderRadius: 8,
+        padding: 14,
       }}
     >
-      <Text
-        style={{
-          color: primary ? '#fff' : colors.text,
-          fontSize: 16,
-          fontWeight: '700',
-          marginBottom: detail ? 6 : 0,
-        }}
-      >
+      <Text style={{ color: colors.text, fontSize: 14, fontWeight: '700', marginBottom: 4 }}>
         {title}
       </Text>
-
-      {!!detail && (
-        <Text
-          style={{
-            color: primary ? 'rgba(255,255,255,0.82)' : colors.textSecondary,
-            fontSize: 14,
-            lineHeight: 20,
-          }}
-        >
-          {detail}
-        </Text>
-      )}
+      <Text style={{ color: colors.textSecondary, fontSize: 12, lineHeight: 17 }}>
+        {detail}
+      </Text>
     </Pressable>
+  );
+}
+
+function DailyDecisionPanel({
+  recommendation,
+  primaryLabel,
+  onPrimaryPress,
+}: {
+  recommendation: DailyHomeRecommendation;
+  primaryLabel: string;
+  onPrimaryPress: () => void;
+}) {
+  return (
+    <View
+      style={{
+        backgroundColor: colors.surface,
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: colors.borderSoft,
+        padding: 18,
+        marginBottom: 16,
+      }}
+    >
+      <Text style={{ color: colors.muted, fontSize: 12, fontWeight: '700', marginBottom: 8 }}>
+        BUGÜN
+      </Text>
+
+      <Text style={{ color: colors.text, fontSize: 24, fontWeight: '700', marginBottom: 10 }}>
+        {recommendation.title}
+      </Text>
+
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: 10 }}>
+        <MetaPill label={recommendation.todayLabel} />
+        <MetaPill label={recommendation.city} />
+        <MetaPill label={`${recommendation.weatherBand}°C`} />
+        <MetaPill label={recommendation.occasion} />
+      </View>
+
+      <Text style={{ color: colors.textSecondary, fontSize: 15, lineHeight: 22, marginBottom: 18 }}>
+        {recommendation.reason}
+      </Text>
+
+      <PrimaryCta title={primaryLabel} onPress={onPrimaryPress} />
+    </View>
   );
 }
 
@@ -128,66 +190,64 @@ export default function Home() {
           paddingBottom: 40,
         }}
       >
-        <Text
-          style={{
-            fontSize: 34,
-            fontWeight: '700',
-            color: colors.text,
-            marginBottom: 10,
-          }}
-        >
+        <Text style={{ fontSize: 34, fontWeight: '700', color: colors.text, marginBottom: 8 }}>
           Combinia
         </Text>
 
-        <Text
-          style={{
-            fontSize: 16,
-            lineHeight: 24,
-            color: colors.textSecondary,
-            marginBottom: 20,
-          }}
-        >
-          Bugünün havasına, planına ve gardırobuna göre tek net karar.
+        <Text style={{ fontSize: 16, lineHeight: 23, color: colors.textSecondary, marginBottom: 24 }}>
+          Bugünün planı için tek net karar.
         </Text>
 
         {profile ? (
           <>
             {!!dailyRecommendation && (
-              <DailyRecommendationCard
+              <DailyDecisionPanel
                 recommendation={dailyRecommendation}
                 onPrimaryPress={openDailyRecommendation}
                 primaryLabel={primaryLabel}
               />
             )}
 
-            <HomeAction
-              title="Bugün Ne Giymeliyim?"
-              detail="Mod, hava ve dolap durumuna göre yeni bir görünüm üret."
-              primary
-              onPress={() => router.push('/outfit/occasion')}
-            />
-
-            <HomeAction
-              title={wardrobeCount ? 'Gardıroba Ürün Ekle' : 'İlk Ürünü Ekle'}
-              detail="Yeni parça temiz PNG onayından geçmeden kaydedilmez."
-              onPress={() => router.push('/wardrobe/add')}
-            />
-
-            {!!cleanupCount && (
-              <HomeAction
-                title={`${cleanupCount} görsel temizlenmeli`}
-                detail="Gardırop kalitesini Closet içinde toparla."
-                onPress={() => router.push('/shell/closet')}
-              />
+            {!dailyRecommendation && (
+              <PrimaryCta title="Bugün Ne Giymeliyim?" onPress={() => router.push('/outfit/occasion')} />
             )}
+
+            <View style={{ flexDirection: 'row', marginTop: dailyRecommendation ? 0 : 16 }}>
+              <View style={{ flex: 1, marginRight: 10 }}>
+                <SecondaryCta
+                  title={wardrobeCount ? 'Ürün Ekle' : 'İlk Ürünü Ekle'}
+                  detail="Temiz PNG onayıyla"
+                  onPress={() => router.push('/wardrobe/add')}
+                />
+              </View>
+
+              <View style={{ flex: 1 }}>
+                <SecondaryCta
+                  title={cleanupCount ? 'Closet Uyarısı' : 'Closet'}
+                  detail={cleanupCount ? `${cleanupCount} görsel bekliyor` : 'Dolabı düzenle'}
+                  onPress={() => router.push('/shell/closet')}
+                />
+              </View>
+            </View>
           </>
         ) : (
-          <HomeAction
-            title="Stil Profilini Oluştur"
-            detail="Günlük karar ekranı için önce kısa profilini tamamla."
-            primary
-            onPress={() => router.push('/onboarding/gender')}
-          />
+          <View
+            style={{
+              backgroundColor: colors.surface,
+              borderRadius: 8,
+              borderWidth: 1,
+              borderColor: colors.borderSoft,
+              padding: 18,
+            }}
+          >
+            <Text style={{ color: colors.text, fontSize: 22, fontWeight: '700', marginBottom: 8 }}>
+              Stil Profilini Oluştur
+            </Text>
+            <Text style={{ color: colors.textSecondary, fontSize: 15, lineHeight: 22, marginBottom: 18 }}>
+              Günlük karar ekranı için kısa profilini tamamla.
+            </Text>
+            <PrimaryCta title="Başla" onPress={() => router.push('/onboarding/gender')} />
+          </View>
         )}
       </ScrollView>
     </View>

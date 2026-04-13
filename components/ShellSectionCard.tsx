@@ -16,15 +16,11 @@ export default function ShellSectionCard({
     <View
       style={{
         backgroundColor: colors.surface,
-        borderRadius: 22,
-        padding: 18,
+        borderRadius: 8,
+        padding: 16,
         borderWidth: 1,
         borderColor: colors.borderSoft,
         marginBottom: 16,
-        shadowColor: '#000',
-        shadowOpacity: 0.06,
-        shadowRadius: 10,
-        elevation: 4,
       }}
     >
       <Text
@@ -55,7 +51,7 @@ export default function ShellSectionCard({
           style={{
             backgroundColor: '#F3EFE9',
             paddingVertical: 12,
-            borderRadius: 14,
+            borderRadius: 8,
             alignItems: 'center',
           }}
         >
