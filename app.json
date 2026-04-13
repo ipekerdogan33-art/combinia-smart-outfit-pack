@@ -1,0 +1,13 @@
+{
+  "expo": {
+    "name": "Combinia",
+    "slug": "combinia",
+    "scheme": "combinia",
+    "plugins": [
+      "expo-router"
+    ],
+    "android": {
+      "package": "com.combinia.app"
+    }
+  }
+}

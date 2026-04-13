@@ -1,0 +1,38 @@
+{
+  "top": {
+    "padding": 4,
+    "rotate": 0
+  },
+  "bottom": {
+    "padding": 4,
+    "rotate": 0
+  },
+  "dress": {
+    "padding": 2,
+    "rotate": 0
+  },
+  "suit": {
+    "padding": 2,
+    "rotate": 0
+  },
+  "jacket": {
+    "padding": 1,
+    "rotate": 0
+  },
+  "outerwear": {
+    "padding": 0,
+    "rotate": 0
+  },
+  "shoe": {
+    "padding": 2,
+    "rotate": 0
+  },
+  "bag": {
+    "padding": 2,
+    "rotate": -6
+  },
+  "accessory": {
+    "padding": 1,
+    "rotate": -4
+  }
+}
