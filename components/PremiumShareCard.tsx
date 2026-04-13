@@ -1,4 +1,5 @@
-import { Image, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
+import ProductImageFrame from './ProductImageFrame';
 import colors from '../theme/colors';
 import { SavedLook } from '../lib/savedLooksStorage';
 import { LookScoreBreakdown } from '../lib/lookScoring';
@@ -24,9 +25,9 @@ export default function PremiumShareCard({
         borderWidth: 1,
         borderColor: colors.borderSoft,
         shadowColor: '#000',
-        shadowOpacity: 0.08,
-        shadowRadius: 12,
-        elevation: 5,
+        shadowOpacity: 0.05,
+        shadowRadius: 10,
+        elevation: 3,
         marginBottom: 18,
       }}
     >
@@ -74,41 +75,25 @@ export default function PremiumShareCard({
       </View>
 
       {!!previewUri ? (
-        <View
-          style={{
-            backgroundColor: '#F6F2EC',
-            borderRadius: 22,
-            overflow: 'hidden',
-            marginBottom: 14,
-          }}
-        >
-          <Image
-            source={{ uri: previewUri }}
-            style={{ width: '100%', height: 560 }}
-            resizeMode="contain"
-          />
-        </View>
+        <ProductImageFrame
+          uri={previewUri}
+          category="try-on"
+          variant="hero"
+          style={{ marginBottom: 14 }}
+        />
       ) : (
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: 14 }}>
           {pieces.slice(0, 6).map((item, index) => (
-            <View
+            <ProductImageFrame
               key={`${item.id}-${index}`}
+              uri={item.processedImageUri || item.imageUri}
+              category={item.category}
               style={{
                 width: '31%',
-                aspectRatio: 1,
-                borderRadius: 16,
-                overflow: 'hidden',
-                backgroundColor: '#F6F2EC',
                 marginRight: '3%',
                 marginBottom: 10,
               }}
-            >
-              <Image
-                source={{ uri: item.processedImageUri || item.imageUri }}
-                style={{ width: '100%', height: '100%' }}
-                resizeMode="contain"
-              />
-            </View>
+            />
           ))}
         </View>
       )}

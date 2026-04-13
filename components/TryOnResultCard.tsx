@@ -1,4 +1,5 @@
-import { Image, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
+import ProductImageFrame from './ProductImageFrame';
 import colors from '../theme/colors';
 
 export default function TryOnResultCard({
@@ -22,9 +23,9 @@ export default function TryOnResultCard({
         borderColor: colors.borderSoft,
         marginBottom: 18,
         shadowColor: '#000',
-        shadowOpacity: 0.06,
+        shadowOpacity: 0.05,
         shadowRadius: 10,
-        elevation: 4,
+        elevation: 3,
       }}
     >
       <Text
@@ -51,19 +52,7 @@ export default function TryOnResultCard({
         </Text>
       )}
 
-      <View
-        style={{
-          backgroundColor: '#F6F2EC',
-          borderRadius: 20,
-          overflow: 'hidden',
-        }}
-      >
-        <Image
-          source={{ uri }}
-          style={{ width: '100%', height: 520 }}
-          resizeMode="contain"
-        />
-      </View>
+      <ProductImageFrame uri={uri} category="try-on" variant="hero" />
     </View>
   );
 }

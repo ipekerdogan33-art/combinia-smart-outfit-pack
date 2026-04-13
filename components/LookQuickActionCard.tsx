@@ -1,4 +1,5 @@
-import { Image, Pressable, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
+import ProductImageFrame from './ProductImageFrame';
 import colors from '../theme/colors';
 import { SavedLook } from '../lib/savedLooksStorage';
 
@@ -57,25 +58,17 @@ export default function LookQuickActionCard({
         {look.occasion}
       </Text>
 
-      <View style={{ flexDirection: 'row', marginBottom: 12 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'flex-start', marginBottom: 12 }}>
         {pieces.slice(0, 3).map((item, index) => (
-          <View
+          <ProductImageFrame
             key={index}
+            uri={item.processedImageUri || item.imageUri}
+            category={item.category}
+            frameWidth={84}
             style={{
-              width: 84,
-              height: 84,
-              borderRadius: 14,
-              overflow: 'hidden',
-              backgroundColor: '#F6F2EC',
               marginRight: 10,
             }}
-          >
-            <Image
-              source={{ uri: item.processedImageUri || item.imageUri }}
-              style={{ width: '100%', height: '100%' }}
-              resizeMode="contain"
-            />
-          </View>
+          />
         ))}
       </View>
 

@@ -1,4 +1,5 @@
-import { Image, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
+import ProductImageFrame from './ProductImageFrame';
 import colors from '../theme/colors';
 import { SavedLook } from '../lib/savedLooksStorage';
 
@@ -24,9 +25,9 @@ export default function ShareLookCard({ look }: { look: SavedLook }) {
         borderWidth: 1,
         borderColor: colors.borderSoft,
         shadowColor: '#000',
-        shadowOpacity: 0.08,
-        shadowRadius: 12,
-        elevation: 5,
+        shadowOpacity: 0.05,
+        shadowRadius: 10,
+        elevation: 3,
       }}
     >
       <Text
@@ -52,20 +53,12 @@ export default function ShareLookCard({ look }: { look: SavedLook }) {
       </Text>
 
       {!!look.tryOnPreviewUri ? (
-        <View
-          style={{
-            backgroundColor: '#F6F2EC',
-            borderRadius: 22,
-            overflow: 'hidden',
-            marginBottom: 14,
-          }}
-        >
-          <Image
-            source={{ uri: look.tryOnPreviewUri }}
-            style={{ width: '100%', height: 560 }}
-            resizeMode="contain"
-          />
-        </View>
+        <ProductImageFrame
+          uri={look.tryOnPreviewUri}
+          category="try-on"
+          variant="hero"
+          style={{ marginBottom: 14 }}
+        />
       ) : (
         <View
           style={{
@@ -75,24 +68,16 @@ export default function ShareLookCard({ look }: { look: SavedLook }) {
           }}
         >
           {pieces.slice(0, 6).map((item, index) => (
-            <View
+            <ProductImageFrame
               key={index}
+              uri={item.processedImageUri || item.imageUri}
+              category={item.category}
               style={{
                 width: '31%',
-                aspectRatio: 1,
-                borderRadius: 16,
-                overflow: 'hidden',
-                backgroundColor: '#F6F2EC',
                 marginRight: '3%',
                 marginBottom: 10,
               }}
-            >
-              <Image
-                source={{ uri: item.processedImageUri || item.imageUri }}
-                style={{ width: '100%', height: '100%' }}
-                resizeMode="contain"
-              />
-            </View>
+            />
           ))}
         </View>
       )}
