@@ -16,7 +16,7 @@ export default function OptionCard({
       style={{
         paddingVertical: 18,
         paddingHorizontal: 18,
-        borderRadius: 18,
+        borderRadius: 8,
         backgroundColor: active ? colors.primary : colors.surface,
         borderWidth: 1,
         borderColor: active ? colors.primary : colors.border,

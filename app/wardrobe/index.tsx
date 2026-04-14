@@ -1,7 +1,6 @@
-import * as ImagePicker from 'expo-image-picker';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Alert, FlatList, Image, Pressable, Text, View } from 'react-native';
+import { FlatList, Image, Pressable, Text, View } from 'react-native';
 import colors from '../../theme/colors';
 import { WardrobeItem } from '../../types/wardrobe';
 import {
@@ -14,25 +13,6 @@ import WardrobeItemStatusBadge from '../../components/WardrobeItemStatusBadge';
 import { PRIMARY_FILTERS } from '../../constants/catalog';
 import MetadataBadges from '../../components/MetadataBadges';
 import { reprocessWardrobeItemById } from '../../lib/backgroundProcessing';
-import { CleanupStatusRecord, getCleanupStatusMap } from '../../lib/backgroundStatusStorage';
-import CleanupStatusBadge from '../../components/CleanupStatusBadge';
-import { applyManualProcessedImageToWardrobeItem } from '../../lib/manualCleanPng';
-
-async function pickManualPngUri() {
-  const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-  if (!permission.granted) {
-    throw new Error('permission-denied');
-  }
-
-  const result = await ImagePicker.launchImageLibraryAsync({
-    mediaTypes: ImagePicker.MediaTypeOptions.Images,
-    quality: 1,
-    allowsEditing: false,
-  });
-
-  if (result.canceled || !result.assets?.length) return '';
-  return result.assets[0].uri;
-}
 
 function OccasionChips({ occasions }: { occasions: string[] }) {
   if (!occasions.length) return null;
@@ -46,7 +26,7 @@ function OccasionChips({ occasions }: { occasions: string[] }) {
             backgroundColor: '#F3EFE9',
             paddingHorizontal: 10,
             paddingVertical: 6,
-            borderRadius: 999,
+            borderRadius: 8,
             marginRight: 8,
             marginBottom: 8,
           }}
@@ -62,34 +42,28 @@ function OccasionChips({ occasions }: { occasions: string[] }) {
 
 function ItemCard({
   item,
-  cleanupRecord,
   onDelete,
   onStyle,
   onToggleFavorite,
   onCycleStatus,
   onEdit,
   onReprocess,
-  onManualPng,
 }: {
   item: WardrobeItem;
-  cleanupRecord?: CleanupStatusRecord | null;
   onDelete: (id: string) => void;
   onStyle: (id: string) => void;
   onToggleFavorite: (id: string) => void;
   onCycleStatus: (id: string) => void;
   onEdit: (id: string) => void;
   onReprocess: (id: string) => void;
-  onManualPng: (id: string) => void;
 }) {
-  const cleaned = !!item.processedImageUri && item.processedImageUri !== item.imageUri;
-
   return (
     <View
       style={{
         backgroundColor: colors.surface,
         borderWidth: 1,
         borderColor: colors.borderSoft,
-        borderRadius: 20,
+        borderRadius: 8,
         padding: 16,
         marginBottom: 14,
         shadowColor: '#000',
@@ -101,7 +75,7 @@ function ItemCard({
       <View
         style={{
           backgroundColor: '#F6F2EC',
-          borderRadius: 20,
+          borderRadius: 16,
           marginBottom: 12,
           overflow: 'hidden',
         }}
@@ -118,7 +92,6 @@ function ItemCard({
 
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: 6 }}>
         <WardrobeItemStatusBadge status={item.status || 'Temiz'} />
-        <CleanupStatusBadge record={cleanupRecord} cleaned={cleaned} />
 
         {!!item.isFavorite && (
           <View
@@ -126,7 +99,7 @@ function ItemCard({
               backgroundColor: '#FFF2C9',
               paddingHorizontal: 10,
               paddingVertical: 6,
-              borderRadius: 999,
+              borderRadius: 8,
               marginRight: 8,
               marginBottom: 8,
             }}
@@ -142,7 +115,7 @@ function ItemCard({
             backgroundColor: '#F3EFE9',
             paddingHorizontal: 10,
             paddingVertical: 6,
-            borderRadius: 999,
+            borderRadius: 8,
             marginBottom: 8,
           }}
         >
@@ -198,7 +171,7 @@ function ItemCard({
         style={{
           backgroundColor: colors.primary,
           paddingVertical: 14,
-          borderRadius: 14,
+          borderRadius: 8,
           alignItems: 'center',
           marginBottom: 10,
         }}
@@ -215,7 +188,7 @@ function ItemCard({
             flex: 1,
             backgroundColor: '#F3EFE9',
             paddingVertical: 14,
-            borderRadius: 14,
+            borderRadius: 8,
             alignItems: 'center',
             marginRight: 8,
           }}
@@ -231,40 +204,24 @@ function ItemCard({
             flex: 1,
             backgroundColor: '#F3EFE9',
             paddingVertical: 14,
-            borderRadius: 14,
+            borderRadius: 8,
             alignItems: 'center',
           }}
         >
           <Text style={{ color: colors.text, fontSize: 13, fontWeight: '700' }}>
-            Otomatik Yenile
+            Fotoğrafı Yenile
           </Text>
         </Pressable>
       </View>
 
       <View style={{ flexDirection: 'row', marginBottom: 10 }}>
         <Pressable
-          onPress={() => onManualPng(item.id)}
-          style={{
-            flex: 1,
-            backgroundColor: '#F3EFE9',
-            paddingVertical: 14,
-            borderRadius: 14,
-            alignItems: 'center',
-            marginRight: 8,
-          }}
-        >
-          <Text style={{ color: colors.text, fontSize: 13, fontWeight: '700' }}>
-            Temiz PNG Yükle
-          </Text>
-        </Pressable>
-
-        <Pressable
           onPress={() => onToggleFavorite(item.id)}
           style={{
             flex: 1,
             backgroundColor: '#F3EFE9',
             paddingVertical: 14,
-            borderRadius: 14,
+            borderRadius: 8,
             alignItems: 'center',
           }}
         >
@@ -281,7 +238,7 @@ function ItemCard({
             flex: 1,
             backgroundColor: '#EEF2FB',
             paddingVertical: 14,
-            borderRadius: 14,
+            borderRadius: 8,
             alignItems: 'center',
             marginRight: 8,
           }}
@@ -297,7 +254,7 @@ function ItemCard({
             flex: 1,
             backgroundColor: '#F3ECE4',
             paddingVertical: 14,
-            borderRadius: 14,
+            borderRadius: 8,
             alignItems: 'center',
           }}
         >
@@ -312,16 +269,11 @@ function ItemCard({
 
 export default function WardrobeScreen() {
   const [items, setItems] = useState<WardrobeItem[]>([]);
-  const [cleanupMap, setCleanupMap] = useState<Record<string, CleanupStatusRecord>>({});
   const [filter, setFilter] = useState<string>('Tümü');
 
   const loadItems = useCallback(async () => {
-    const [data, cleanup] = await Promise.all([
-      getWardrobeItems(),
-      getCleanupStatusMap(),
-    ]);
+    const data = await getWardrobeItems();
     setItems(data);
-    setCleanupMap(cleanup);
   }, []);
 
   useFocusEffect(
@@ -355,22 +307,6 @@ export default function WardrobeScreen() {
     }
   };
 
-  const handleManualPng = async (itemId: string) => {
-    try {
-      const uri = await pickManualPngUri();
-      if (!uri) return;
-
-      await applyManualProcessedImageToWardrobeItem(itemId, uri);
-      loadItems();
-    } catch (error: any) {
-      if (error?.message === 'permission-denied') {
-        Alert.alert('İzin gerekli', 'PNG seçebilmek için galeri izni vermelisin.');
-      } else {
-        Alert.alert('Yükleme hatası', 'Temiz PNG yüklenemedi.');
-      }
-    }
-  };
-
   const resolveFilter = (value: string) => {
     if (value === 'Tümü') return items;
     if (value === 'Favoriler') return items.filter((item) => item.isFavorite);
@@ -394,7 +330,6 @@ export default function WardrobeScreen() {
           fontSize: 30,
           fontWeight: '700',
           color: colors.text,
-          letterSpacing: -0.5,
           marginBottom: 10,
         }}
       >
@@ -408,30 +343,15 @@ export default function WardrobeScreen() {
           marginBottom: 20,
         }}
       >
-        Telefonunda temizlediğin PNG dosyasını doğrudan bir parçaya bağlayabilirsin.
+        Ürünlerini düzenle, favorilerini seç ve kombinlere hazır tut.
       </Text>
-
-      <Pressable
-        onPress={() => router.push('/background-cleanup')}
-        style={{
-          backgroundColor: '#F3EFE9',
-          paddingVertical: 16,
-          borderRadius: 18,
-          alignItems: 'center',
-          marginBottom: 12,
-        }}
-      >
-        <Text style={{ color: colors.text, fontSize: 14, fontWeight: '700' }}>
-          Arka Plan Temizleme Merkezini Aç
-        </Text>
-      </Pressable>
 
       <Pressable
         onPress={() => router.push('/wardrobe/add')}
         style={{
           backgroundColor: colors.primary,
           paddingVertical: 18,
-          borderRadius: 18,
+          borderRadius: 8,
           alignItems: 'center',
           marginBottom: 16,
           shadowColor: '#000',
@@ -458,7 +378,7 @@ export default function WardrobeScreen() {
               onPress={() => setFilter(item)}
               style={{
                 backgroundColor: active ? colors.primary : '#F3EFE9',
-                borderRadius: 999,
+                borderRadius: 8,
                 paddingHorizontal: 16,
                 paddingVertical: 10,
                 marginRight: 10,
@@ -476,7 +396,7 @@ export default function WardrobeScreen() {
         <View
           style={{
             backgroundColor: colors.surface,
-            borderRadius: 18,
+            borderRadius: 8,
             borderWidth: 1,
             borderColor: colors.borderSoft,
             padding: 18,
@@ -499,12 +419,10 @@ export default function WardrobeScreen() {
           renderItem={({ item }) => (
             <ItemCard
               item={item}
-              cleanupRecord={cleanupMap[item.id]}
               onDelete={handleDelete}
               onToggleFavorite={handleToggleFavorite}
               onCycleStatus={handleCycleStatus}
               onReprocess={handleReprocess}
-              onManualPng={handleManualPng}
               onEdit={(id) =>
                 router.push({
                   pathname: '/wardrobe/edit',

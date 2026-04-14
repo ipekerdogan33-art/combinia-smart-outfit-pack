@@ -11,7 +11,6 @@ import {
   buildDailyHomeRecommendation,
   DailyHomeRecommendation,
 } from '../lib/homeRecommendation';
-import { analyzeImageQuality } from '../lib/imageQualityAudit';
 
 function MetaPill({ label }: { label: string }) {
   return (
@@ -129,7 +128,6 @@ export default function Home() {
   const [profile, setProfile] = useState<OnboardingData | null>(null);
   const [dailyRecommendation, setDailyRecommendation] = useState<DailyHomeRecommendation | null>(null);
   const [wardrobeCount, setWardrobeCount] = useState(0);
-  const [cleanupCount, setCleanupCount] = useState(0);
 
   const loadData = useCallback(async () => {
     const [savedProfile, savedLooks, wardrobeItems] = await Promise.all([
@@ -140,7 +138,6 @@ export default function Home() {
 
     setProfile(savedProfile);
     setWardrobeCount(wardrobeItems.length);
-    setCleanupCount(analyzeImageQuality(wardrobeItems).rawCount);
     setDailyRecommendation(
       await buildDailyHomeRecommendation(savedProfile, wardrobeItems, savedLooks)
     );
@@ -215,15 +212,15 @@ export default function Home() {
               <View style={{ flex: 1, marginRight: 10 }}>
                 <SecondaryCta
                   title={wardrobeCount ? 'Ürün Ekle' : 'İlk Ürünü Ekle'}
-                  detail="Temiz PNG onayıyla"
+                  detail="Fotoğrafla hızlı ekle"
                   onPress={() => router.push('/wardrobe/add')}
                 />
               </View>
 
               <View style={{ flex: 1 }}>
                 <SecondaryCta
-                  title={cleanupCount ? 'Closet Uyarısı' : 'Closet'}
-                  detail={cleanupCount ? `${cleanupCount} görsel bekliyor` : 'Dolabı düzenle'}
+                  title="Closet"
+                  detail="Dolabı düzenle"
                   onPress={() => router.push('/shell/closet')}
                 />
               </View>

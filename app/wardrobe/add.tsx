@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import {
   Alert,
-  Image,
   Pressable,
   ScrollView,
   Text,
@@ -15,8 +14,8 @@ import colors from '../../theme/colors';
 import OptionCard from '../../components/OptionCard';
 import PrimaryButton from '../../components/PrimaryButton';
 import ProcessingStatusCard from '../../components/ProcessingStatusCard';
-import TransparentPngPreviewCard from '../../components/TransparentPngPreviewCard';
-import CleanupRequirementCard from '../../components/CleanupRequirementCard';
+import ProductImageFrame from '../../components/ProductImageFrame';
+import ShellScreenHeader from '../../components/ShellScreenHeader';
 import { addWardrobeItem } from '../../lib/wardrobeStorage';
 import {
   CANONICAL_CATEGORIES,
@@ -27,32 +26,13 @@ import {
 import { inferOccasions } from '../../lib/canonicalWardrobe';
 import { CanonicalCategory, CanonicalSubcategory, Occasion } from '../../types/catalog';
 import {
-  ProductSelectionPoint,
   isApprovedProductIsolation,
   processWardrobeImage,
 } from '../../lib/backgroundProcessing';
 import { getMaterialConfig } from '../../lib/materialOptions';
 
-function parseSelectionPoints(value?: string): ProductSelectionPoint[] {
-  if (!value) return [];
-
-  try {
-    const parsed = JSON.parse(value);
-    if (!Array.isArray(parsed)) return [];
-
-    return parsed.filter(
-      (point) =>
-        Number.isFinite(point?.x) &&
-        Number.isFinite(point?.y) &&
-        point.x >= 0 &&
-        point.x <= 1 &&
-        point.y >= 0 &&
-        point.y <= 1
-    );
-  } catch {
-    return [];
-  }
-}
+const PHOTO_ERROR_MESSAGE =
+  'Bu fotoğrafı okumakta zorlandık. Daha sade arka planlı başka bir fotoğraf deneyin.';
 
 function ChoiceChip({
   label,
@@ -68,7 +48,7 @@ function ChoiceChip({
       onPress={onPress}
       style={{
         backgroundColor: active ? colors.primary : '#F3EFE9',
-        borderRadius: 999,
+        borderRadius: 8,
         paddingHorizontal: 14,
         paddingVertical: 10,
         marginRight: 10,
@@ -82,39 +62,67 @@ function ChoiceChip({
   );
 }
 
-function WizardStep({
-  index,
+function FieldGroup({
   title,
-  detail,
   children,
 }: {
-  index: string;
   title: string;
-  detail: string;
   children: ReactNode;
 }) {
+  return (
+    <View style={{ marginBottom: 18 }}>
+      <Text style={{ fontSize: 16, fontWeight: '700', color: colors.text, marginBottom: 12 }}>
+        {title}
+      </Text>
+      {children}
+    </View>
+  );
+}
+
+function Panel({ children }: { children: ReactNode }) {
   return (
     <View
       style={{
         backgroundColor: colors.surface,
-        borderRadius: 24,
+        borderRadius: 8,
         borderWidth: 1,
         borderColor: colors.borderSoft,
-        padding: 18,
+        padding: 20,
         marginBottom: 18,
       }}
     >
-      <Text style={{ color: colors.muted, fontSize: 12, fontWeight: '700', marginBottom: 6 }}>
-        ADIM {index}
-      </Text>
-      <Text style={{ fontSize: 20, fontWeight: '700', color: colors.text, marginBottom: 6 }}>
-        {title}
-      </Text>
-      <Text style={{ fontSize: 14, lineHeight: 21, color: colors.textSecondary, marginBottom: 16 }}>
-        {detail}
-      </Text>
       {children}
     </View>
+  );
+}
+
+function SecondaryButton({
+  title,
+  onPress,
+  disabled,
+}: {
+  title: string;
+  onPress: () => void;
+  disabled?: boolean;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      disabled={disabled}
+      style={{
+        flex: 1,
+        borderWidth: 1,
+        borderColor: colors.borderSoft,
+        borderRadius: 8,
+        paddingVertical: 14,
+        alignItems: 'center',
+        opacity: disabled ? 0.55 : 1,
+      }}
+    >
+      <Text style={{ color: colors.text, fontSize: 14, fontWeight: '700' }}>
+        {title}
+      </Text>
+    </Pressable>
   );
 }
 
@@ -158,9 +166,6 @@ export default function AddWardrobeItemScreen() {
     category?: string;
     subcategory?: string;
     occasion?: string;
-    originalUri?: string;
-    selectionPoints?: string;
-    imageToken?: string;
   }>();
 
   const [originalImageUri, setOriginalImageUri] = useState('');
@@ -174,10 +179,8 @@ export default function AddWardrobeItemScreen() {
   const [pattern, setPattern] = useState('');
   const [selectedOccasions, setSelectedOccasions] = useState<Occasion[]>([]);
   const [processing, setProcessing] = useState(false);
-  const [processingMessage, setProcessingMessage] = useState('');
-  const [statusMessage, setStatusMessage] = useState('');
-  const [cleanupReady, setCleanupReady] = useState(false);
-  const [lastImageToken, setLastImageToken] = useState('');
+  const [photoError, setPhotoError] = useState('');
+  const [readyToEdit, setReadyToEdit] = useState(false);
 
   useEffect(() => {
     const paramSubcategory = params.subcategory as CanonicalSubcategory | undefined;
@@ -198,21 +201,7 @@ export default function AddWardrobeItemScreen() {
     if (paramSubcategory && !name.trim()) {
       setName(paramSubcategory);
     }
-  }, [params.category, params.subcategory, params.occasion]);
-
-  useEffect(() => {
-    if (!params.imageToken || params.imageToken === lastImageToken) return;
-    if (!params.originalUri) return;
-
-    const selectionPoints = parseSelectionPoints(params.selectionPoints);
-
-    setLastImageToken(params.imageToken);
-    setOriginalImageUri(params.originalUri);
-    setProcessedImageUri('');
-    setCleanupReady(false);
-
-    void runProcessing(params.originalUri, selectionPoints);
-  }, [params.imageToken, params.originalUri, params.selectionPoints, lastImageToken]);
+  }, [params.category, params.subcategory, params.occasion, name]);
 
   const availableSubcategories = useMemo(
     () => (category ? CATEGORY_SUBCATEGORY_MAP[category] : []),
@@ -225,33 +214,39 @@ export default function AddWardrobeItemScreen() {
     if (fabric && !materialConfig.options.includes(fabric)) {
       setFabric('');
     }
-  }, [category, fabric, materialConfig.options]);
+  }, [fabric, materialConfig.options]);
 
   const baseReady = useMemo(() => {
-    return !!originalImageUri && !!category && !!subcategory && !!name.trim() && selectedOccasions.length > 0;
-  }, [originalImageUri, category, subcategory, name, selectedOccasions]);
+    return !!processedImageUri && !!category && !!subcategory && !!name.trim() && selectedOccasions.length > 0;
+  }, [processedImageUri, category, subcategory, name, selectedOccasions]);
 
-  const canSave = baseReady && cleanupReady;
+  const canSave = baseReady && readyToEdit;
 
-  const runProcessing = async (sourceUri: string, selectionPoints?: ProductSelectionPoint[]) => {
+  const runProcessing = async (sourceUri: string) => {
     setProcessing(true);
-    setProcessingMessage('Seçilen ürün ayrıştırılıyor ve yalnızca ürün kaldığı doğrulanıyor...');
-    setStatusMessage('');
-    setCleanupReady(false);
+    setPhotoError('');
+    setReadyToEdit(false);
+    setOriginalImageUri(sourceUri);
+    setProcessedImageUri('');
 
     try {
-      const response = await processWardrobeImage(sourceUri, { points: selectionPoints || [] });
+      const response = await processWardrobeImage(sourceUri);
+      const cleaned = isApprovedProductIsolation(response);
+
+      if (!cleaned) {
+        setPhotoError(PHOTO_ERROR_MESSAGE);
+        return;
+      }
+
       const detectedCategory = mapDetectedCategory(response.category);
       const detectedSubcategory = mapDetectedSubcategory(response.subcategory, detectedCategory);
       const inferredOccasions =
         detectedCategory && detectedSubcategory
           ? inferOccasions(detectedCategory, detectedSubcategory)
           : [];
-      const cleaned = isApprovedProductIsolation(response);
 
-      setOriginalImageUri(sourceUri);
-      setProcessedImageUri(response.processedImageUri || sourceUri);
-      setCleanupReady(cleaned);
+      setProcessedImageUri(response.processedImageUri);
+      setReadyToEdit(true);
 
       if (!category && detectedCategory) setCategory(detectedCategory);
       if (!subcategory && detectedSubcategory) setSubcategory(detectedSubcategory);
@@ -261,23 +256,10 @@ export default function AddWardrobeItemScreen() {
         setName(smartName || 'Yeni Parça');
       }
       if (!selectedOccasions.length && inferredOccasions.length) setSelectedOccasions(inferredOccasions);
-
-      if (cleaned) {
-        setStatusMessage('Yalnızca ürün kaldı. Bu temiz PNG kaydedilebilir.');
-      } else {
-        setStatusMessage(
-          response.rejectionReasons?.length
-            ? response.rejectionReasons.join(' ')
-            : 'Kapı, sandalye, duvar, askı veya zemin gibi arka plan öğeleri görünüyorsa kayıt kapalı kalır.'
-        );
-      }
     } catch {
-      setProcessedImageUri(sourceUri);
-      setCleanupReady(false);
-      setStatusMessage('Ürün ayrıştırılamadı. Yalnızca ürünü seçerek yeniden dene.');
+      setPhotoError(PHOTO_ERROR_MESSAGE);
     } finally {
       setProcessing(false);
-      setProcessingMessage('');
     }
   };
 
@@ -292,21 +274,12 @@ export default function AddWardrobeItemScreen() {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       quality: 1,
+      allowsEditing: false,
     });
 
     if (result.canceled || !result.assets?.length) return;
 
-    const asset = result.assets[0];
-
-    router.push({
-      pathname: '/wardrobe/isolate',
-      params: {
-        imageUri: asset.uri,
-        category: category || '',
-        subcategory: subcategory || '',
-        occasion: params.occasion || '',
-      },
-    });
+    void runProcessing(result.assets[0].uri);
   };
 
   const handleCategory = (value: CanonicalCategory) => {
@@ -351,113 +324,91 @@ export default function AddWardrobeItemScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <ScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 80, paddingBottom: 32 }}>
-        <Text style={{ fontSize: 30, fontWeight: '700', color: colors.text, marginBottom: 10 }}>
-          Ürün Ekle
-        </Text>
+        <ShellScreenHeader
+          eyebrow="WARDROBE"
+          title={readyToEdit ? 'Ürünü Düzenle' : 'Ürün Ekle'}
+          description={
+            readyToEdit
+              ? 'Kombinlerde doğru çalışması için birkaç kısa detayı tamamla.'
+              : 'Fotoğrafını seç, Combinia ürünü gardırobuna hazırlasın.'
+          }
+        />
 
-        <Text style={{ fontSize: 16, lineHeight: 24, color: colors.textSecondary, marginBottom: 24 }}>
-          Fotoğraf önce ürün ayrıştırma onayından geçer. Arka plan görünürse kayıt açılmaz.
-        </Text>
-
-        <WizardStep
-          index="1"
-          title="Ürünü ayır"
-          detail="Fotoğrafı seç, yalnızca ürünü işaretle ve temiz PNG sonucunu onayla."
-        >
-          {!!processing && (
-            <ProcessingStatusCard
-              title="Görsel işleniyor"
-              detail={processingMessage || 'Ürün ayrıştırılıyor...'}
-            />
-          )}
-
-          <Pressable
-            onPress={pickImage}
-            style={{
-              backgroundColor: '#F6F2EC',
-              borderRadius: 20,
-              borderWidth: 1,
-              borderColor: colors.borderSoft,
-              padding: 16,
-              alignItems: 'center',
-              justifyContent: 'center',
-              minHeight: 220,
-              marginBottom: 16,
-            }}
-          >
-            {originalImageUri ? (
-              <Image
-                source={{ uri: processedImageUri || originalImageUri }}
-                style={{ width: '100%', height: 220, borderRadius: 16 }}
-                resizeMode="contain"
-              />
-            ) : (
-              <Text style={{ color: colors.textSecondary, fontSize: 16, fontWeight: '700' }}>
-                Fotoğraf Seç ve Ürünü Ayır
-              </Text>
-            )}
-          </Pressable>
-
-          {!!originalImageUri && (
-            <TransparentPngPreviewCard
-              originalUri={originalImageUri}
-              processedUri={processedImageUri || originalImageUri}
-              cleaned={cleanupReady}
-            />
-          )}
-
-          <CleanupRequirementCard
-            visible={!!originalImageUri && !cleanupReady && !processing}
-            message={statusMessage || 'Sadece ürün kalmadığı için kayıt kapalı.'}
-            onRetry={() => originalImageUri && runProcessing(originalImageUri, parseSelectionPoints(params.selectionPoints))}
-            onPickNew={pickImage}
-            onOpenSafeArea={() => {
-              if (!originalImageUri) return;
-              router.push({
-                pathname: '/wardrobe/isolate',
-                params: {
-                  imageUri: originalImageUri,
-                  category: category || '',
-                  subcategory: subcategory || '',
-                  occasion: params.occasion || '',
-                },
-              });
-            }}
-          />
-
-          {!!statusMessage && !processing && cleanupReady && (
-            <Text style={{ fontSize: 13, lineHeight: 20, color: '#1D7A35' }}>
-              {statusMessage}
+        {!readyToEdit && !processing && !photoError && (
+          <Panel>
+            <Text style={{ fontSize: 20, fontWeight: '700', color: colors.text, marginBottom: 8 }}>
+              Fotoğraf seç
             </Text>
-          )}
-        </WizardStep>
+            <Text style={{ fontSize: 15, lineHeight: 22, color: colors.textSecondary, marginBottom: 18 }}>
+              Net ışıkta çekilmiş, ürünün rahat göründüğü bir fotoğraf yeterli.
+            </Text>
+            <PrimaryButton title="Fotoğraf Seç" onPress={pickImage} />
+          </Panel>
+        )}
 
-        {cleanupReady && (
+        {processing && (
+          <ProcessingStatusCard
+            title="Fotoğraf hazırlanıyor"
+            detail="Ürünü gardırobuna eklemeye hazırlıyoruz."
+          />
+        )}
+
+        {!!photoError && !processing && (
+          <Panel>
+            <Text style={{ fontSize: 20, fontWeight: '700', color: colors.text, marginBottom: 8 }}>
+              Fotoğraf okunamadı
+            </Text>
+            <Text style={{ fontSize: 15, lineHeight: 22, color: colors.textSecondary, marginBottom: 18 }}>
+              {PHOTO_ERROR_MESSAGE}
+            </Text>
+
+            <View style={{ flexDirection: 'row' }}>
+              <View style={{ flex: 1, marginRight: 8 }}>
+                <SecondaryButton title="Başka Fotoğraf Seç" onPress={pickImage} />
+              </View>
+              <Pressable
+                onPress={() => originalImageUri && runProcessing(originalImageUri)}
+                disabled={!originalImageUri}
+                style={{
+                  flex: 1,
+                  backgroundColor: originalImageUri ? colors.primary : colors.disabled,
+                  borderRadius: 8,
+                  paddingVertical: 14,
+                  alignItems: 'center',
+                }}
+              >
+                <Text style={{ color: '#fff', fontSize: 14, fontWeight: '700' }}>
+                  Tekrar Dene
+                </Text>
+              </Pressable>
+            </View>
+          </Panel>
+        )}
+
+        {readyToEdit && (
           <>
-            <WizardStep
-              index="2"
-              title="Kategoriyi seç"
-              detail="Ürün tipi ve kullanım modları kombin motorunun temelini oluşturur."
-            >
-              <Text style={{ fontSize: 16, fontWeight: '700', color: colors.text, marginBottom: 12 }}>
-                Kategori
-              </Text>
+            <Panel>
+              <ProductImageFrame
+                uri={processedImageUri}
+                category={category || undefined}
+                variant="hero"
+              />
+            </Panel>
 
-              {CANONICAL_CATEGORIES.map((item) => (
-                <OptionCard
-                  key={item}
-                  label={item}
-                  active={category === item}
-                  onPress={() => handleCategory(item)}
-                />
-              ))}
+            <Panel>
+              <FieldGroup title="Kategori">
+                {CANONICAL_CATEGORIES.map((item) => (
+                  <OptionCard
+                    key={item}
+                    label={item}
+                    active={category === item}
+                    onPress={() => handleCategory(item)}
+                  />
+                ))}
+              </FieldGroup>
 
               {!!category && (
-                <>
-                  <Text style={{ fontSize: 16, fontWeight: '700', color: colors.text, marginTop: 6, marginBottom: 12 }}>
-                    Alt kategori
-                  </Text>
-
+                <FieldGroup title="Alt kategori">
                   {availableSubcategories.map((item) => (
                     <OptionCard
                       key={item}
@@ -466,121 +417,103 @@ export default function AddWardrobeItemScreen() {
                       onPress={() => setSubcategory(item)}
                     />
                   ))}
-                </>
+                </FieldGroup>
               )}
 
-              <Text style={{ fontSize: 16, fontWeight: '700', color: colors.text, marginTop: 10, marginBottom: 12 }}>
-                Kullanım modları
-              </Text>
+              <FieldGroup title="Kullanım modları">
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+                  {OCCASIONS.map((item) => (
+                    <ChoiceChip
+                      key={item}
+                      label={item}
+                      active={selectedOccasions.includes(item)}
+                      onPress={() => toggleOccasion(item)}
+                    />
+                  ))}
+                </View>
+              </FieldGroup>
+            </Panel>
 
-              <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
-                {OCCASIONS.map((item) => (
-                  <ChoiceChip
-                    key={item}
-                    label={item}
-                    active={selectedOccasions.includes(item)}
-                    onPress={() => toggleOccasion(item)}
-                  />
-                ))}
-              </View>
-            </WizardStep>
+            <Panel>
+              <FieldGroup title={materialConfig.label}>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+                  {materialConfig.options.map((item) => (
+                    <ChoiceChip
+                      key={item}
+                      label={item}
+                      active={fabric === item}
+                      onPress={() => setFabric(item)}
+                    />
+                  ))}
+                </View>
+              </FieldGroup>
 
-            <WizardStep
-              index="3"
-              title="Detayları tamamla"
-              detail="Az ama doğru bilgi, önerilerin kalitesini yükseltir."
-            >
-              <Text style={{ fontSize: 16, fontWeight: '700', color: colors.text, marginBottom: 12 }}>
-                {materialConfig.label}
-              </Text>
+              <FieldGroup title="Fit">
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+                  {['Slim', 'Regular', 'Oversize', 'Relaxed', 'Structured'].map((item) => (
+                    <ChoiceChip
+                      key={item}
+                      label={item}
+                      active={fit === item}
+                      onPress={() => setFit(item)}
+                    />
+                  ))}
+                </View>
+              </FieldGroup>
 
-              <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: 16 }}>
-                {materialConfig.options.map((item) => (
-                  <ChoiceChip
-                    key={item}
-                    label={item}
-                    active={fabric === item}
-                    onPress={() => setFabric(item)}
-                  />
-                ))}
-              </View>
+              <FieldGroup title="Desen">
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+                  {['Düz', 'Çizgili', 'Ekose', 'Desenli'].map((item) => (
+                    <ChoiceChip
+                      key={item}
+                      label={item}
+                      active={pattern === item}
+                      onPress={() => setPattern(item)}
+                    />
+                  ))}
+                </View>
+              </FieldGroup>
 
-              <Text style={{ fontSize: 16, fontWeight: '700', color: colors.text, marginBottom: 12 }}>
-                Fit
-              </Text>
+              <FieldGroup title="Ürün adı">
+                <TextInput
+                  value={name}
+                  onChangeText={setName}
+                  placeholder="Örn: Beyaz oversize gömlek"
+                  placeholderTextColor={colors.muted}
+                  style={{
+                    backgroundColor: '#F7F2EB',
+                    borderWidth: 1,
+                    borderColor: colors.borderSoft,
+                    borderRadius: 8,
+                    paddingHorizontal: 16,
+                    paddingVertical: 16,
+                    fontSize: 16,
+                    color: colors.text,
+                  }}
+                />
+              </FieldGroup>
 
-              <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: 16 }}>
-                {['Slim', 'Regular', 'Oversize', 'Relaxed', 'Structured'].map((item) => (
-                  <ChoiceChip
-                    key={item}
-                    label={item}
-                    active={fit === item}
-                    onPress={() => setFit(item)}
-                  />
-                ))}
-              </View>
+              <FieldGroup title="Renk">
+                <TextInput
+                  value={color}
+                  onChangeText={setColor}
+                  placeholder="Örn: Beyaz"
+                  placeholderTextColor={colors.muted}
+                  style={{
+                    backgroundColor: '#F7F2EB',
+                    borderWidth: 1,
+                    borderColor: colors.borderSoft,
+                    borderRadius: 8,
+                    paddingHorizontal: 16,
+                    paddingVertical: 16,
+                    fontSize: 16,
+                    color: colors.text,
+                  }}
+                />
+              </FieldGroup>
 
-              <Text style={{ fontSize: 16, fontWeight: '700', color: colors.text, marginBottom: 12 }}>
-                Desen
-              </Text>
-
-              <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: 16 }}>
-                {['Düz', 'Çizgili', 'Ekose', 'Desenli'].map((item) => (
-                  <ChoiceChip
-                    key={item}
-                    label={item}
-                    active={pattern === item}
-                    onPress={() => setPattern(item)}
-                  />
-                ))}
-              </View>
-
-              <Text style={{ fontSize: 16, fontWeight: '700', color: colors.text, marginBottom: 12 }}>
-                Ürün adı
-              </Text>
-
-              <TextInput
-                value={name}
-                onChangeText={setName}
-                placeholder="Örn: Beyaz oversize gömlek"
-                placeholderTextColor={colors.muted}
-                style={{
-                  backgroundColor: '#F7F2EB',
-                  borderWidth: 1,
-                  borderColor: colors.borderSoft,
-                  borderRadius: 16,
-                  paddingHorizontal: 16,
-                  paddingVertical: 16,
-                  fontSize: 16,
-                  color: colors.text,
-                  marginBottom: 16,
-                }}
-              />
-
-              <Text style={{ fontSize: 16, fontWeight: '700', color: colors.text, marginBottom: 12 }}>
-                Renk
-              </Text>
-
-              <TextInput
-                value={color}
-                onChangeText={setColor}
-                placeholder="Örn: Beyaz"
-                placeholderTextColor={colors.muted}
-                style={{
-                  backgroundColor: '#F7F2EB',
-                  borderWidth: 1,
-                  borderColor: colors.borderSoft,
-                  borderRadius: 16,
-                  paddingHorizontal: 16,
-                  paddingVertical: 16,
-                  fontSize: 16,
-                  color: colors.text,
-                  marginBottom: 20,
-                }}
-              />
-
-              <PrimaryButton title="Temiz PNG ile Kaydet" disabled={!canSave} onPress={handleSave} />
-            </WizardStep>
+              <PrimaryButton title="Gardıroba Ekle" disabled={!canSave} onPress={handleSave} />
+            </Panel>
           </>
         )}
       </ScrollView>

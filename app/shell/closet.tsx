@@ -5,10 +5,8 @@ import colors from '../../theme/colors';
 import { getWardrobeItems } from '../../lib/wardrobeStorage';
 import { WardrobeItem } from '../../types/wardrobe';
 import WardrobeHealthCard from '../../components/WardrobeHealthCard';
-import ImageQualityHealthCard from '../../components/ImageQualityHealthCard';
 import MostWornItemsCard from '../../components/MostWornItemsCard';
 import WardrobeInsightsCard from '../../components/WardrobeInsightsCard';
-import { analyzeImageQuality } from '../../lib/imageQualityAudit';
 import { analyzeWardrobe } from '../../lib/wardrobeInsights';
 import { getWearHistory, WearHistoryEntry } from '../../lib/wearHistoryStorage';
 import WearHistorySummaryCard from '../../components/WearHistorySummaryCard';
@@ -106,7 +104,6 @@ export default function ShellClosetScreen() {
   const dirtyCount = items.filter((item) => item.status === 'Kirli').length;
   const dryCleaningCount = items.filter((item) => item.status === 'Kuru Temizlemede').length;
   const favoriteCount = items.filter((item) => item.isFavorite).length;
-  const imageAudit = useMemo(() => analyzeImageQuality(items), [items]);
   const insights = useMemo(() => analyzeWardrobe(items), [items]);
   const latestWearItemNames = useMemo(() => {
     if (!latestWearEntry) return [];
@@ -127,12 +124,6 @@ export default function ShellClosetScreen() {
           totalCount={items.length}
           cleanCount={cleanCount}
           favoriteCount={favoriteCount}
-        />
-
-        <SectionLabel title="GÖRSEL KALİTE" />
-        <ImageQualityHealthCard
-          audit={imageAudit}
-          onPress={() => router.push('/background-cleanup')}
         />
 
         <SectionLabel title="DOLAP DURUMU" />

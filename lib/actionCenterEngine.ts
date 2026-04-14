@@ -6,7 +6,6 @@ import { ShoppingListItem } from './shoppingListStorage';
 import { SmartShoppingSuggestion } from './shoppingSuggestions';
 import { WeeklyPlan } from '../types/planner';
 import { WardrobeItem } from '../types/wardrobe';
-import { analyzeImageQuality } from './imageQualityAudit';
 
 export type ActionCenterRoute = {
   pathname: string;
@@ -189,25 +188,6 @@ export function buildActionCenterState(args: {
       primaryLabel: 'Listeyi Aç',
       route: {
         pathname: '/shopping',
-      },
-    });
-  }
-
-  const imageAudit = analyzeImageQuality(wardrobeItems);
-  if (imageAudit.rawCount > 0) {
-    const topNames = imageAudit.priorityItems.slice(0, 2).map((item) => item.name).join(', ');
-
-    tasks.push({
-      id: 'cleanup-images',
-      area: 'cleanup',
-      severity: imageAudit.highPriorityCount > 0 ? 'Yüksek' : 'Orta',
-      title: 'Arka plan temizleme eksikleri var',
-      description: topNames
-        ? `${imageAudit.rawCount} parça hâlâ ham görselle duruyor. Öncelik örnekleri: ${topNames}.`
-        : `${imageAudit.rawCount} parça hâlâ ham görselle duruyor.`,
-      primaryLabel: 'Temizleme Merkezini Aç',
-      route: {
-        pathname: '/background-cleanup',
       },
     });
   }

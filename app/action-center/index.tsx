@@ -18,7 +18,6 @@ function QuickLinkPanel() {
   const links = [
     { title: 'Alışveriş', detail: 'Eksik parçalar', route: '/shopping' },
     { title: 'Bakım', detail: 'Kirli ve kuru temizleme', route: '/care' },
-    { title: 'Temiz PNG', detail: 'Görsel kalitesi', route: '/background-cleanup' },
   ];
 
   return (

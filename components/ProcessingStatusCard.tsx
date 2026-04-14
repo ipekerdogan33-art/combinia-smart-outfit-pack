@@ -12,7 +12,7 @@ export default function ProcessingStatusCard({
     <View
       style={{
         backgroundColor: colors.surface,
-        borderRadius: 20,
+        borderRadius: 8,
         padding: 18,
         borderWidth: 1,
         borderColor: colors.borderSoft,

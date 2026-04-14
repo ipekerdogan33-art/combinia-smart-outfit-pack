@@ -1,6 +1,4 @@
 import {
-  ProductIsolationHint,
-  ProductSelectionPoint,
   detectClothing,
   removeAndDetect,
   removeBackground,
@@ -8,8 +6,6 @@ import {
 import { enqueueCleanupItem } from './cleanupQueueStorage';
 import { getWardrobeItems, updateWardrobeItem } from './wardrobeStorage';
 import { WardrobeItem } from '../types/wardrobe';
-
-export type { ProductSelectionPoint };
 
 export type BackgroundProcessSource =
   | 'remove-and-detect'
@@ -202,12 +198,9 @@ export function isApprovedProductIsolation(result: ProcessedWardrobeImage) {
   return hasRealProcessedOutput(result);
 }
 
-export async function processWardrobeImage(
-  imageUri: string,
-  isolationHint?: ProductIsolationHint
-): Promise<ProcessedWardrobeImage> {
+export async function processWardrobeImage(imageUri: string): Promise<ProcessedWardrobeImage> {
   try {
-    const combined = await removeAndDetect(imageUri, isolationHint);
+    const combined = await removeAndDetect(imageUri);
     const isolationData = applyMockIsolationContract(combined);
     const processed = pickProcessedUri(isolationData);
     const decision = buildIsolationDecision(isolationData, processed, imageUri);

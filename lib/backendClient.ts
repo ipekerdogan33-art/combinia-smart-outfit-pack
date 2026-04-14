@@ -1,15 +1,6 @@
 import { DetectResult, RemoveAndDetectResult, TryOnResult } from '../types/backend';
 import { SavedLook } from './savedLooksStorage';
 
-export type ProductSelectionPoint = {
-  x: number;
-  y: number;
-};
-
-export type ProductIsolationHint = {
-  points?: ProductSelectionPoint[];
-};
-
 export const API_BASE =
   process.env.EXPO_PUBLIC_API_BASE_URL ||
   process.env.EXPO_PUBLIC_API_BASE ||
@@ -38,24 +29,6 @@ function buildImageFormData(uri: string, field = 'file', name = 'photo.jpg', typ
     type,
   } as any);
   return formData;
-}
-
-function appendIsolationHint(formData: FormData, hint?: ProductIsolationHint) {
-  const points = hint?.points?.filter(
-    (point) =>
-      Number.isFinite(point.x) &&
-      Number.isFinite(point.y) &&
-      point.x >= 0 &&
-      point.x <= 1 &&
-      point.y >= 0 &&
-      point.y <= 1
-  );
-
-  if (!points?.length) return;
-
-  formData.append('selection_type', 'product_polygon');
-  formData.append('selection_points', JSON.stringify(points));
-  formData.append('product_selection_points', JSON.stringify(points));
 }
 
 function toDataUri(base64?: string, mime = 'image/png') {
@@ -104,12 +77,8 @@ export async function detectClothing(imageUri: string): Promise<DetectResult> {
   return response.json();
 }
 
-export async function removeAndDetect(
-  imageUri: string,
-  isolationHint?: ProductIsolationHint
-): Promise<RemoveAndDetectResult> {
+export async function removeAndDetect(imageUri: string): Promise<RemoveAndDetectResult> {
   const formData = buildImageFormData(imageUri);
-  appendIsolationHint(formData, isolationHint);
 
   const response = await fetchWithTimeout(`${API_BASE}/remove-and-detect`, {
     method: 'POST',
